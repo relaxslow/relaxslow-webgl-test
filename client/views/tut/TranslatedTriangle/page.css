@@ -1,0 +1,7 @@
+.webglCanvas {
+    width: 400px;
+    height: 400px;
+    border-style: solid;
+    border-color: brown;
+    border-width: 1px;
+}

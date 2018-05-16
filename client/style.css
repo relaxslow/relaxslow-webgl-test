@@ -1,0 +1,25 @@
+.Main
+{
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+button,span,p,h2{
+    /* font-family: msyh,serif; */
+    color:rgb(71, 71, 71);
+}
+button{
+    white-space:nowrap;
+}
+
+.MainBody{
+    display: flex;
+    flex-direction: column;
+}
+
+
+
+/* @font-face {
+    font-family: msyh;
+    src: url(/assets/fonts/msyh.ttf);
+} */

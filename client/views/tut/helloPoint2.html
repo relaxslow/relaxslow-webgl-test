@@ -1,0 +1,19 @@
+<span>draw a single point on the screen,more than helloPoint1, this time we pass size and position from javascript to shader</span>
+<br>
+<span class="copyright">the code is directly copy from the book webgl programming guild</span>
+<br>
+
+<canvas class="webglCanvas"> </canvas><br>
+<ul>
+    <li>
+        <span class="question">pay attention with width="400" height="400" in canvas tag </span>
+        <br>
+        <span class="question">if you define width and height in css than the result will not correct, how to solve it ? </span>
+        <br>
+        <span class="solve">add this : gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);</span>
+    </li>
+    <li>
+        <span class="question">the dot looks blur </span><br>
+        <span class="solve">add these two sentence :   canvas.width = canvas.clientWidth;canvas.height = canvas.clientHeight;</span>
+    </li>
+</ul>

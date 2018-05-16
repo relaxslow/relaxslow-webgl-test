@@ -1,0 +1,16 @@
+<span>rotate triangle use matrix </span>
+<br>
+<span class="copyright">the code is directly copy from the book webgl programming guild</span>
+<br>
+
+<canvas class="webglCanvas"> </canvas>
+<br>
+
+<pre>
+     var xformMatrix = new Float32Array([
+     cosB*Sx, sinB*Sx, 0.0, 0.0,
+    -sinB*Sy, cosB*Sy, 0.0, 0.0,
+         0.0,     0.0,  Sz, 0.0,
+          Tx,      Ty,  Tz, 1.0
+    ]);
+</pre>

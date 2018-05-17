@@ -163,6 +163,9 @@ Init = (param) => {
             this.clear = function () {
                 gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);   // Clear <canvas>
                 gl.enable(gl.POLYGON_OFFSET_FILL);
+                //                 gl.enable(gl.POLYGON_OFFSET_LINE);
+
+
 
             };
 
@@ -190,7 +193,6 @@ Init = (param) => {
                 for (let i = 0; i < stage.objs.length; i++) {
                     const obj = stage.objs[i];
 
-                    gl.polygonOffset(2, i); // Set the polygon offset
                     for (let j = 0; j < obj.parts.length; j++) {
                         const part = obj.parts[j];
                         gl.useProgram(part.program);
@@ -206,8 +208,17 @@ Init = (param) => {
 
                         if (part.material != undefined)
                             part.material();
-                      
-                        gl.drawArrays(gl[part.primitiveType], part.first, part.count); //POINTS//TRIANGLES//TRIANGLE_STRIP
+                        if (part.polygonOffset != undefined) {
+                            gl.polygonOffset(part.polygonOffset.factor, part.polygonOffset.unit); // Set the polygon offset
+                            gl.drawArrays(gl[part.primitiveType], part.first, part.count); //POINTS//TRIANGLES//TRIANGLE_STRIP
+                            gl.polygonOffset(0, 0);
+
+                        }
+                        else {
+                            gl.drawArrays(gl[part.primitiveType], part.first, part.count); //POINTS//TRIANGLES//TRIANGLE_STRIP
+
+                        }
+
                     }
 
                 }
@@ -287,6 +298,7 @@ Init = (param) => {
                     axisX: 0,
                     axisY: 0,
                     axisZ: 1,
+                    polygonOffset: { factor: 1, unit: 0.1 },
                     update: function (elapsed) {//update
                         var newAngle = this.angle + (this.rotateSpeed * elapsed) / 1000.0;
                         this.angle = newAngle %= 360;
@@ -365,6 +377,7 @@ Init = (param) => {
                     init: function () {
                         this.matrix.setRotate(10, 0, 0, 1);
                     },
+                    polygonOffset: { factor: 0.5, unit: 0.1 },
 
 
 
@@ -517,29 +530,32 @@ Init = (param) => {
                             buffer: vertexBuffer,
                         }
                     ],
+                    // polygonOffset: { factor: 0, unit: 0.1 },
 
-                }
-            );
+                });
             this.parts.push(part);
         };
 
 
         animation = {};
         animation.init = function () {
-
+            this.framerate = 30;
             this.last = Date.now();
 
 
             this.loop = function () {
                 if (parent.root.animateable == false)
                     return;
+                let id = requestAnimationFrame(animation.loop);
+
                 let now = Date.now();
                 let elapsed = now - animation.last; // milliseconds
+                if (elapsed < 1000 / this.framerate)
+                    return;
                 animation.last = now;
 
                 stage.clear();
                 stage.render(elapsed);
-                let id = requestAnimationFrame(animation.loop);
             };
         };
 

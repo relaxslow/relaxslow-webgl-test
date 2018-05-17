@@ -1,1 +1,1 @@
-heroku logs -a xsapp --tail
+heroku logs -a relaxslow-webgl-test --tail

@@ -82,6 +82,7 @@ xs.loadNewPage = (param) => {
     let { msg, styles, file, cssfile, socketElement, data } = param;
     // resetDocumentDataContainer();
     removeAllJsComponent(socketElement.currentPlug);
+    stopAllAnimation(socketElement.currentPlug);
     removeAllLibs(socketElement.currentPlug);
     function* Tasks() {
 
@@ -112,7 +113,18 @@ xs.loadNewPage = (param) => {
         });
     }
 
+    function stopAllAnimation(plug) {
+        console.log("stop animation in old plug!");
+        if (plug == undefined)
+            return;
+        iterateRoots({
+            root: plug,
+            fun: function (root) {
+                root.animateable = false;
+            }
+        });
 
+    }
 
     function removeAllLibs(plug) {
         if (plug != undefined) {
@@ -255,7 +267,8 @@ xs.loadNewPage = (param) => {
 
         stopAllTimer(socket.currentPlug);
         removeAllWindowListener(socket.currentPlug);
-        stopAllAnimation(socket.currentPlug);
+
+
 
         removeOldCss(socket.currentPlug);
         disconnectPlug(socket.currentPlug);
@@ -319,28 +332,8 @@ xs.loadNewPage = (param) => {
 
             }
         }
-        function stopAllAnimation(plug) {
-            console.log("stop animation in old plug!");
-            if (plug == undefined)
-                return;
-            iterateRoots({
-                root: plug,
-                fun: function (root) {
-                    root.animateable = false;
-                }
-            });
 
-        }
-        function iterateRoots(params) {
-            let { root, fun } = params;
-            fun(root);
-            if (root.childRoot != undefined) {
-                for (let j = 0; j < root.childRoot.length; j++) {
-                    const childRoot = root.childRoot[j];
-                    new iterateRoots({ root: childRoot, fun: fun });
-                }
-            }
-        }
+
         function removeAllWindowListener(plug) {
             if (plug != undefined) {
                 iterateRoots({
@@ -383,6 +376,16 @@ xs.loadNewPage = (param) => {
                         cssComponent.ref.parentNode.removeChild(cssComponent.ref);
                 }
             });
+        }
+    }
+    function iterateRoots(params) {
+        let { root, fun } = params;
+        fun(root);
+        if (root.childRoot != undefined) {
+            for (let j = 0; j < root.childRoot.length; j++) {
+                const childRoot = root.childRoot[j];
+                new iterateRoots({ root: childRoot, fun: fun });
+            }
         }
     }
     function iterateCss(param) {
@@ -474,11 +477,11 @@ xs.sendRequest = (obj) => {//attempt change to obj parameter
         if (this.readyState == 4 && this.status == 200) {
             if (fun != undefined)
                 fun(this.responseText);
-            if(this.readyState==4 && this.status==500){
+            if (this.readyState == 4 && this.status == 500) {
                 window.stop();
             }
         }
-      
+
 
     };
     function addCustomHeader(xhttp, headName, headContent) {

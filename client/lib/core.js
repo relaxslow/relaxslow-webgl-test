@@ -5,9 +5,9 @@ let defineLib = function (libname) {
 };
 defineLib('xs');
 xs.Task = function (param) {
-    let { msg, preTasks, fun } = param;
+    let { msg, preTasks, fun, data } = param;
     this.ref = this;
-    xs.addStep(msg);
+    xs.addStep("task:" + msg);
     this.msg = msg;
     this.fun = fun;
     this.passResultTo = [];
@@ -22,22 +22,29 @@ xs.Task = function (param) {
     }
 
     if (this.preTasks == undefined || this.preTasks.length == 0)
-        this.fun();
+        this.fun(data);//no preTask
 
 
     this.taskFinish = function (result) {
         //         console.log(this);
-        xs.finishStep(msg);
+        xs.finishStep("task:" + msg);
+
         for (let i = 0; i < this.passResultTo.length; i++) {
             const postTask = this.passResultTo[i];
 
             for (let key in result) {
                 postTask.taskParam[key] = result[key];
             }
+
+            for (let key in postTask.data) {
+                postTask.taskParam[key] = postTask.data[key];
+            }
+
+
             let index = postTask.preTasks.indexOf(this);
             postTask.preTasks.splice(index, 1);
             if (postTask.preTasks.length == 0)
-                postTask.fun(postTask.taskParam);
+                postTask.fun(postTask.taskParam);//has preTask
         }
     };
 
@@ -1135,3 +1142,9 @@ xs.getElement = function (parent, className) {
         xs.redAlert(`can't find element ${className}`);
     return element;
 };
+
+xs.runFunIfExist = (fun,param) => {
+    if (fun != undefined)
+        fun(param);
+}
+

@@ -45,7 +45,83 @@ webgl.createShader = (gl, type, source) => {
     console.log(gl.getShaderInfoLog(shader));
     gl.deleteShader(shader);
 };
+webgl.loadPrograms = (param) => {
+    let { files, fun, gl } = param;
+    let programs = {};
+    let loadOneProgram = (file) => {
+        const task = new xs.Task({
+            msg: `build program ${file}`,
+            fun: function () {
+                let vertexShaderFilePath = file + '.vert';
+                let getVertexShaderSrc = new xs.Task({
+                    msg: `get vertex Shader src:${file}`,
+                    fun: function (param) {
+                        webgl.getShaderSrc({
+                            file: vertexShaderFilePath, fun: function (loadedShader, file) {
+                                getVertexShaderSrc.taskFinish({ vertexShader: loadedShader });
+                            }
+                        });
+                    }
+                });
+                let fragmentShaderFilePath = file + '.frag';
+                let getFragmentShaderSrc = new xs.Task({
+                    msg: `get fragment Shader src:${file}`,
+                    fun: function (param) {
+                        webgl.getShaderSrc({
+                            file: fragmentShaderFilePath, fun: function (loadedShader, file) {
+                                getFragmentShaderSrc.taskFinish({ fragShader: loadedShader });
+                            }
+                        });
+                    }
+                });
 
+                let combine = new xs.Task({
+                    msg: `combine vertex and frag srcs:${file}`,
+                    preTasks: [getVertexShaderSrc, getFragmentShaderSrc],
+                    fun: function (param) {
+                        let { vertexShader, fragShader } = param;
+                        let nameArr = file.split('/');
+                        if (nameArr[0] === "")
+                            nameArr.splice(0, 1);
+                        let fullName = "";
+                        for (let j = 0; j < nameArr.length; j++) {
+                            const name = nameArr[j];
+                            fullName += name;
+                            if (j != nameArr.length - 1)
+                                fullName += '-';
+                        }
+
+                        programs[fullName] = webgl.createProgram(gl, vertexShader, fragShader, fullName);
+                        combine.taskFinish();
+                        task.taskFinish();
+                    }
+                });
+            },
+
+        });
+        loadAllProgram.push(task);
+
+
+
+    };
+
+    let loadAllProgram = [];
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        loadOneProgram(file);
+
+    }
+    let passResult = new xs.Task({
+        msg: "passResult",
+        preTasks: loadAllProgram,
+        fun: function (param) {
+            fun(programs);
+            passResult.taskFinish();
+        },
+
+    });
+
+};
 webgl.createProgram2 = (gl, vertexShader, fragmentShader) => {
     var program = gl.createProgram();
     gl.attachShader(program, vertexShader);
@@ -117,7 +193,10 @@ webgl.loadImgs = function (imgPaths, fun) {
     }
 
 };
-webgl.connectAttributes = function (gl, part) {
+webgl.connectIndice = (gl, part) => {
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, part.indice);
+};
+webgl.connectAttributes = (gl, part) => {
     for (let i = 0; i < part.attributes.length; i++) {
         const attribute = part.attributes[i];
         gl.bindBuffer(gl.ARRAY_BUFFER, attribute.buffer);
@@ -127,14 +206,26 @@ webgl.connectAttributes = function (gl, part) {
         gl.enableVertexAttribArray(attribute.location);
     }
 };
-webgl.connectUniforms = function (gl, part) {
+webgl.connectUniforms = (gl, part) => {
     for (let key in part.uniforms) {
         const uniform = part.uniforms[key];
         uniform.fun(gl, part);
     }
 };
 
-
+webgl.createIndiceBuf = function (gl, param) {
+    let { name, indiceData } = param;
+    let indiceBuf = gl.createBuffer();
+    if (!indiceBuf) {
+        xs.redAlert('Failed to create the buffer object');
+        return;
+    }
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indiceBuf);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indiceData, gl.STATIC_DRAW);
+    indiceBuf.num = indiceData.length;
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+    return indiceBuf;
+};
 webgl.createVertexBuf = function (gl, param) {
     let { name, verticeData, pointNum } = param;
     let vertexBuffer = gl.createBuffer();
@@ -147,7 +238,7 @@ webgl.createVertexBuf = function (gl, param) {
     gl.bufferData(gl.ARRAY_BUFFER, verticeData, gl.STATIC_DRAW);
     vertexBuffer.name = name;
     vertexBuffer.data = verticeData;
-    vertexBuffer.pointNum = pointNum;
+    vertexBuffer.num = pointNum;
     vertexBuffer.span = verticeData.length / pointNum;
     vertexBuffer.FSIZE = verticeData.BYTES_PER_ELEMENT;
 
@@ -295,14 +386,23 @@ webgl.setPart = function (gl, parts) {
     }
     return parts;
 };
+
 webgl.createPart = function (gl, part) {
     part.matrix = new cuon.Matrix4();
-    if (part.first == undefined)
-        part.first = 0;
-    if (part.count == undefined)
-        part.count = part.attributes[0].buffer.pointNum;
+
+    if (part.indice == undefined) {
+        if(part.first == undefined ) part.first = 0 ;
+        if(part.count == undefined ) part.count =  part.attributes[0].buffer.num;
+    }
+    else {
+        if(part.offset == undefined ) part.offset = 0 ;
+        if(part.count == undefined ) part.count =part.indice.num ;
+        if(part.indiceDataType == undefined ) part.indiceDataType = gl.UNSIGNED_BYTE ;
+    }
+
     webgl.getUniformLocation(gl, part.program, part.uniforms);
     webgl.getAttribLocation(gl, part.program, part.attributes);
+
     return part;
 };
 
@@ -311,5 +411,12 @@ webgl.initParts = function (parts) {
         const part = parts[i];
         if (part.init != undefined)
             part.init();
+    }
+};
+webgl.drawPart = (gl, part) => {
+    if (part.indice == undefined) {
+        gl.drawArrays(part.primitiveType, part.first, part.count); //POINTS//TRIANGLES//TRIANGLE_STRIP
+    } else {
+        gl.drawElements(part.primitiveType, part.count, part.indiceDataType, part.offset);
     }
 };

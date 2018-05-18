@@ -42,6 +42,7 @@ Init = (param) => {
     linkPageToButton('webgl023', 'LookAtTrianglesWithKeys');
     linkPageToButton('webgl024', 'OrthoView');
     linkPageToButton('webgl025', 'PerspectiveView');
+    linkPageToButton('webgl026', 'helloCube');
     
 
 

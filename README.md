@@ -20,9 +20,9 @@ Use to manage life period of functions. Easyly pass result between asynchronize 
         preTasks: ['init Webgl'],
         data: {
             files: [
-                `/client/views/tut/${data.folder}/indicator`,
-                `/client/views/tut/${data.folder}/cube`,
-                `/client/views/tut/${data.folder}/triangles`
+                `/client/views/tut/indicator`,
+                `/client/views/tut/cube`,
+                `/client/views/tut/triangles`
             ],
 
         },
@@ -41,4 +41,96 @@ Use to manage life period of functions. Easyly pass result between asynchronize 
 
 _webgl.Obj_
 use to manage all the obj in the scene, envelop webgl render pipeline.
+
+#### useage:
+```javascript:
+     let rectangle = new webgl.Obj();
+        rectangle.init = function () {
+            this.setName('rectangle');
+            this.addBuffer({
+                name: "vertexBuffer",
+                verticeData: new Float32Array(
+                    [
+                        -0.5, 0.5, 0.0, 1.0,
+                        -0.5, -0.5, 0.0, 0.0,
+                        0.5, 0.5, 1.0, 1.0,
+                        0.5, -0.5, 1.0, 0.0,
+                    ]
+                ),
+                pointNum: 4
+            });
+            this.addTexBuffer({
+                name: "sky",
+                img: webgl.imgs.sky_jpg,
+                texParam: {
+                    "TEXTURE_MIN_FILTER": "NEAREST",
+                    "TEXTURE_WRAP_S": "CLAMP_TO_EDGE"
+                }
+            });
+            this.addTexBuffer({
+                name: "circle",
+                img: webgl.imgs.circle_png,
+                texParam: {
+                    "TEXTURE_MIN_FILTER": "NEAREST",
+                    "TEXTURE_WRAP_S": "CLAMP_TO_EDGE"
+                }
+            });
+
+
+            this.addPart({
+                program: webgl.programs["helloCube-rectangle"],
+                primitiveType: webgl.gl.TRIANGLE_STRIP,
+                uniforms: {
+                    MVP: {
+                        name: "u_MVPMatrix",
+                        fun: webgl.mvpGeneralFun
+                    },
+
+                },
+                attributes: [
+                    {
+                        name: "a_Position",
+                        dataAmount: 2,
+                        beginIndex: 0,
+                        buffer: this.buffers.vertexBuffer,
+                    },
+
+                    {
+                        name: "a_TexCoord",
+                        dataAmount: 2,
+                        beginIndex: 2,
+                        buffer: this.buffers.vertexBuffer,
+                    }
+                ],
+                useTextures: [
+                    {
+                        name: "u_Sampler0",
+                        channel: 0,
+                        texture: this.textures.sky,
+                    },
+                    {
+                        name: "u_Sampler1",
+                        channel: 1,
+                        texture: this.textures.circle
+                    }
+                ],
+                init: function () {
+                   //---
+                },
+                update: function (elapsed) {//update
+                //...
+
+                },
+
+            });
+            this.ontop = 1;
+
+        };
+```
+> Use the javascript pattern(json) to define a obj. The class facilitate comprehension of the webgl pipeline.
+
+> Each Object contain buffers and textures which can be use by parts. Each object may have multi parts.
+
+> Each part has a complete definition about how the use program to present object. Uniforms, attributes, useTextures
+
 

@@ -1,5 +1,5 @@
 //rotatedTriangle_matrix4
-Init = (param) => {
+Init = function(param) {
 
     let { parent, data } = param;
     xs.addStep('load lib|get shader|webgl main', 3);
@@ -14,14 +14,14 @@ Init = (param) => {
             '/client/lib/guild/cuon-matrix',
 
         ],
-        fun: () => {
+        fun: function() {
             xs.finishStep('load libs');
             webgl.getShaderSrcs({
                 files: [
                     "/client/views/tut/RotatingTriangle/shader.vert",
                     "/client/views/tut/RotatingTriangle/shader.frag"
                 ],
-                fun: (shaders) => {
+                fun: function(shaders){
                     xs.finishStep('get shader');
                     initWebgl({ shaders: shaders });
                     xs.finishStep('main');
@@ -33,7 +33,7 @@ Init = (param) => {
     function initWebgl(param) {
         let { shaders } = param;
         let canvas = parent.getElementsByClassName('webglCanvas')[0];
-        var gl = cuon.getWebGLContext(canvas);
+        let gl = cuon.getWebGLContext(canvas);
         if (gl == null) {
             xs.redAlert('webgl not support!!');
             return;
@@ -50,19 +50,19 @@ Init = (param) => {
             return;
         }
 
-        var n = initVertexBuffers(gl);
+        let n = initVertexBuffers(gl);
         if (n < 0) {
             xs.redAlert('Failed to set the positions of the vertices');
             return;
         }
         let currentAngle = 0;
-        var ANGLE_STEP = 45.0;
-        var modelMatrix = new cuon.Matrix4();
+        let ANGLE_STEP = 45.0;
+        let modelMatrix = new cuon.Matrix4();
 
 
-        var u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
+        let u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
 
-        var u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor');
+        let u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor');
         gl.uniform4f(u_FragColor, 1.0, 0.0, 0.0, 1.0);
 
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -73,14 +73,14 @@ Init = (param) => {
         let g_last = Date.now();
         function animate(angle) {
             // Calculate the elapsed time
-            var now = Date.now();
-            var elapsed = now - g_last; // milliseconds
+            let now = Date.now();
+            let elapsed = now - g_last; // milliseconds
             g_last = now;
             // Update the current rotation angle (adjusted by the elapsed time)
-            var newAngle = angle + (ANGLE_STEP * elapsed) / 1000.0;
+            let newAngle = angle + (ANGLE_STEP * elapsed) / 1000.0;
             return newAngle %= 360;
         }
-        var tick = function () {
+        let tick = function () {
             if (parent.root.animateable == false)
                 return;
             currentAngle = animate(currentAngle);  // Update the rotation angle
@@ -108,14 +108,14 @@ Init = (param) => {
     }
 
     function initVertexBuffers(gl) {
-        var vertices = new Float32Array([
+        let vertices = new Float32Array([
             0.0, 0.3, -0.3, -0.3, 0.3, -0.3
         ]);
 
-        var n = vertices.length / 2; // The number of vertices
+        let n = vertices.length / 2; // The number of vertices
 
         // Create a buffer object
-        var vertexBuffer = gl.createBuffer();
+        let vertexBuffer = gl.createBuffer();
         if (!vertexBuffer) {
             console.log('Failed to create the buffer object');
             return -1;
@@ -126,7 +126,7 @@ Init = (param) => {
         // Write date into the buffer object
         gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-        var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+        let a_Position = gl.getAttribLocation(gl.program, 'a_Position');
         if (a_Position < 0) {
             console.log('Failed to get the storage location of a_Position');
             return -1;

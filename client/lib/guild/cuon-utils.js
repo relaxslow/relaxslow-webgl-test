@@ -8,7 +8,7 @@ defineLib('cuon');
  * @param fshader a fragment shader program (string)
  * @return true, if the program object was created and successfully made current 
  */
-cuon.initShaders = (gl, vshader, fshader) => {
+cuon.initShaders =function (gl, vshader, fshader) {
     var program = cuon.createProgram(gl, vshader, fshader);
     if (!program) {
         console.log('Failed to create program');
@@ -28,7 +28,7 @@ cuon.initShaders = (gl, vshader, fshader) => {
  * @param fshader a fragment shader program (string)
  * @return created program object, or null if the creation has failed
  */
-cuon.createProgram = (gl, vshader, fshader) => {
+cuon.createProgram = function(gl, vshader, fshader)  {
     // Create shader object
     var vertexShader = cuon.loadShader(gl, gl.VERTEX_SHADER, vshader);
     var fragmentShader = cuon.loadShader(gl, gl.FRAGMENT_SHADER, fshader);
@@ -69,7 +69,7 @@ cuon.createProgram = (gl, vshader, fshader) => {
  * @param source shader program (string)
  * @return created shader object, or null if the creation has failed.
  */
-cuon.loadShader = (gl, type, source) => {
+cuon.loadShader = function(gl, type, source) {
     // Create shader object
     var shader = gl.createShader(type);
     if (shader == null) {

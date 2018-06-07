@@ -1,4 +1,4 @@
-Init = (param) => {
+Init = function(param) {
     let { parent, data } = param;
     xs.addStep('load lib/get shader/webgl main', 3);
     xs.addLibs({
@@ -10,14 +10,14 @@ Init = (param) => {
             '/client/lib/guild/webgl-debug',
 
         ],
-        fun: () => {
+        fun: function() {
             xs.finishStep(`load libs`);
             webgl.getShaderSrcs({
                 files: [
                     "/assets/shader/webglGuild01.vert",
                     "/assets/shader/webglGuild01.frag"
                 ],
-                fun: (shaders) => {
+                fun: function(shaders){
                     xs.finishStep('get shader');
                     webglMain({ shaders: shaders });
                     xs.finishStep('webgl main');

@@ -1,5 +1,5 @@
 //texture quad
-Init = (param) => {
+Init = function (param) {
 
     let { parent, data, currentfile } = param;
 
@@ -16,7 +16,7 @@ Init = (param) => {
                     '/client/lib/guild/cuon-matrix',
                 ],
                 fun: function () {
-                    loadLib.taskFinish();
+                    xs.TaskFinish(loadLib);
                 }
             });
         }
@@ -30,8 +30,8 @@ Init = (param) => {
                     `/client/views/tut/${data.folder}/shader.vert`,
                     `/client/views/tut/${data.folder}/shader.frag`
                 ],
-                fun: (shaders) => {
-                    getShaders.taskFinish({ shaders: shaders });
+                fun: function (shaders) {
+                    xs.TaskFinish(getShaders, { shaders: shaders });
                 }
             });
         }
@@ -47,7 +47,7 @@ Init = (param) => {
                 '/assets/img/leaves.png',
                 '/assets/img/sky.jpg',
             ], function (imgs) {
-                loadImgs.taskFinish({ imgs: imgs });
+                xs.TaskFinish(loadImgs, { imgs: imgs });
             });
         }
     });
@@ -62,7 +62,7 @@ Init = (param) => {
             }
             xs.successHint('webgl initialized!!');
             xs.scheduleRefreshFrame({ fun: main, data: [gl, canvas, shaders, imgs] });
-            initWebgl.taskFinish();
+            xs.TaskFinish(initWebgl);
         }
     });
 
@@ -78,7 +78,7 @@ Init = (param) => {
         gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);
 
         // Set vertex information
-        var verticesTexCoords = new Float32Array([
+        let verticesTexCoords = new Float32Array([
             -0.5, 0.5, -0.3, 1.7,
             -0.5, -0.5, -0.3, -0.2,
             0.5, 0.5, 1.7, 1.7,

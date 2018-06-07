@@ -7,6 +7,7 @@
  */
 
 defineLib('cuon');
+
 /**
  * Constructor of cuon.Matrix4
  * If opt_src is specified, new matrix is initialized by opt_src.

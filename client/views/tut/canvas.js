@@ -1,4 +1,4 @@
-Init = (param) => {
+Init = function(param) {
     let { parent, data } = param;
     let canvas = parent.getElementsByClassName('webglCanvas')[0];
     let gl = canvas.getContext("webgl");

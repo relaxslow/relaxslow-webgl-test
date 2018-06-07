@@ -1,4 +1,4 @@
-Init = (param) => {
+Init = function(param) {
     //multiTexture
     let { parent, data, currentfile } = param;
 
@@ -16,8 +16,7 @@ Init = (param) => {
 
                 ],
                 fun: function () {
-                    //                     console.log(this);
-                    loadLib.taskFinish();
+                    xs.TaskFinish(loadLib);
                 }
             });
         }
@@ -31,8 +30,8 @@ Init = (param) => {
                     `/client/views/tut/${data.folder}/shader.vert`,
                     `/client/views/tut/${data.folder}/shader.frag`
                 ],
-                fun: (shaders) => {
-                    getShaders.taskFinish({ shaders: shaders });
+                fun: function(shaders){
+                    xs.TaskFinish(getShaders,{ shaders: shaders });
                 }
             });
         }
@@ -46,7 +45,7 @@ Init = (param) => {
                 '/assets/img/circle.png',
                 '/assets/img/sky.jpg',
             ], function (imgs) {
-                loadImgs.taskFinish({ imgs: imgs });
+                xs.TaskFinish(loadImgs,{ imgs: imgs });
             });
         }
     });
@@ -61,7 +60,7 @@ Init = (param) => {
             }
             xs.successHint('webgl initialized!!');
             xs.scheduleRefreshFrame({ fun: main, data: [gl, canvas, shaders, imgs] });
-            initWebgl.taskFinish();
+            xs.TaskFinish(initWebgl);
         }
     });
 
@@ -220,7 +219,7 @@ Init = (param) => {
 
 
             this.update = function (elapsed) {
-                var newAngle = this.angle + (this.rotateSpeed * elapsed) / 1000.0;
+                let newAngle = this.angle + (this.rotateSpeed * elapsed) / 1000.0;
                 this.angle = newAngle %= 360;
             };
             this.render = function () {

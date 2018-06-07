@@ -82,12 +82,12 @@ function handleFile(req, res) {
 }
 
 //router--------------------------------------------
-function getUserViewAndMenu(userData, direct) {
+function getUserViewAndMenu(userData) {
     let routeArr = splitRoute(userData.currentUrl);
-    if (direct == true)
-        userData.currentView = view.directMap[routeArr[1]];
-    else
-        userData.currentView = view.map[routeArr[1]];
+    // if (direct == true)
+    userData.currentView = view.map[routeArr[1]];
+    // else
+    //     userData.currentView = view.map[routeArr[1]];
     userData.currentMenu = routeArr[2];
 }
 function correctLanguage(userData) {
@@ -129,7 +129,7 @@ let systemRoutine = {
                 id: userData.id,
                 okfun: function (findUser) {
                     userData.currentUrl = new Buffer(req.b_Id, 'base64').toString('ascii');
-                    getUserViewAndMenu(userData, true);
+                    getUserViewAndMenu(userData);
                     user.updateUrlAndHistory(findUser, userData, function (updatedUser) {
                         console.log('update url and history');
                         returnData(res, user.packageData(updatedUser));
@@ -241,7 +241,7 @@ let systemRoutine = {
             }
         });
     },
-    "getShader": (req, res) => {
+    "getShader": function (req, res) {
         let filePath = new Buffer(req.b_Id, 'base64').toString('ascii');
         fs.readFile(`.${filePath}`, function (err, data) {
             if (err) {
@@ -365,27 +365,21 @@ function renderHtml(res) {
 <head>
 <title>webgl</title>
 <link rel="stylesheet" type="text/css" href="/client/style.css">
-<script type="text/javascript" src="/client/lib/core.js"></script>
-<script type="text/javascript" src="/client/lib/translate.js"></script>
-<script type="text/javascript" src="/client/lib/animation.js"></script>
-<script type="text/javascript" src="/client/lib/identify.js"></script>
+
+<script type="text/javascript" src="/client/lib/main.js"></script>
 </head>
-<body>
+<body onload="xs.checkInit();">
+<div class="Root">
+<button class='test'>test</button>
+<span data-translate="Content"> test mem </span>
+</div>
+
+
 </body>
 </html>`;
     res.end(html);
 }
 
-
-
-// function addServerData(data) {
-//     if (data == undefined)
-//         return "";
-//     let str = `<script>`;
-//     str += `let serverData= ${JSON.stringify(data)};\n`;
-//     str += `</script>`;
-//     return str;
-// }
 
 function searchMenuTree(searchItem, mainMenu) {
     let level = 0;

@@ -1,4 +1,4 @@
-Init = (param) => {
+Init = function(param) {
     let { parent, data } = param;
     xs.addStep('load lib/get shader/webgl main', 3);
 
@@ -10,14 +10,14 @@ Init = (param) => {
             '/client/lib/guild/webgl-utils',
             '/client/lib/guild/webgl-debug',
         ],
-        fun: () => {
+        fun: function() {
             xs.finishStep('load libs');
             webgl.getShaderSrcs({
                 files: [
                     "/client/views/tut/coloredPoints/shader.vert",
                     "/client/views/tut/coloredPoints/shader.frag"
                 ],
-                fun: (shaders) => {
+                fun: function(shaders) {
                     xs.finishStep('get shader');
                     init({ shaders: shaders });
                     xs.finishStep('webgl main');
@@ -29,7 +29,7 @@ Init = (param) => {
     function init(param) {
         let { shaders } = param;
         let canvas = parent.getElementsByClassName('webglCanvas')[0];
-        var gl = cuon.getWebGLContext(canvas);
+        let gl = cuon.getWebGLContext(canvas);
         if (gl == null) {
             xs.redAlert('webgl not support!!');
             return;
@@ -39,9 +39,9 @@ Init = (param) => {
             xs.redAlert('Failed to intialize shaders.');
             return;
         }
-        var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
-        var a_PointSize = gl.getAttribLocation(gl.program, 'a_PointSize');
-        var u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor');
+        let a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+        let a_PointSize = gl.getAttribLocation(gl.program, 'a_PointSize');
+        let u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor');
 
         canvas.points = [];
         canvas.colors = [];
@@ -78,8 +78,8 @@ Init = (param) => {
 
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        var len = canvas.points.length;
-        for (var i = 0; i < len; i ++) {
+        let len = canvas.points.length;
+        for (let i = 0; i < len; i ++) {
             let point = canvas.points[i];
             gl.vertexAttrib3f(a_Position, point[0], point[1], 0.0);
             gl.vertexAttrib1f(a_PointSize, 10.0);

@@ -1,14 +1,14 @@
-Init = (param) => {
+Init = function(param) {
     let { parent, data } = param;
     // Retrieve <canvas> element
-    var canvas = document.getElementsByClassName('webglCanvas')[0];
+    let canvas = document.getElementsByClassName('webglCanvas')[0];
     if (!canvas) {
         console.log('Failed to retrieve the <canvas> element');
         return false;
     }
 
     // Get the rendering context for 2DCG
-    var ctx = canvas.getContext('2d');
+    let ctx = canvas.getContext('2d');
 
     // Draw a blue rectangle
     ctx.fillStyle = 'rgba(0, 0, 255, 1.0)'; // Set color to blue

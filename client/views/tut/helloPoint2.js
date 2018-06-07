@@ -1,4 +1,4 @@
-Init = (param) => {
+Init = function(param) {
     let { parent, data } = param;
     xs.addStep('load lib/get shader/webgl main', 3);
 
@@ -10,14 +10,14 @@ Init = (param) => {
             '/client/lib/guild/webgl-utils',
             '/client/lib/guild/webgl-debug',
         ],
-        fun: () => {
+        fun: function() {
             xs.finishStep('load libs');
             webgl.getShaderSrcs({
                 files: [
                     "/assets/shader/helloPoint2.vert",
                     "/assets/shader/webglGuild01.frag"
                 ],
-                fun: (shaders) => {
+                fun: function(shaders){
                     xs.finishStep('get shader');
                     webglMain({ shaders: shaders });
                     xs.finishStep('webgl main');
@@ -29,7 +29,7 @@ Init = (param) => {
     function webglMain(param) {
         let { shaders } = param;
         let canvas = parent.getElementsByClassName('webglCanvas')[0];
-        var gl = cuon.getWebGLContext(canvas);
+        let gl = cuon.getWebGLContext(canvas);
         if (gl == null) {
             xs.redAlert('webgl not support!!');
             return;
@@ -39,8 +39,8 @@ Init = (param) => {
             xs.redAlert('Failed to intialize shaders.');
             return;
         }
-        var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
-        var a_PointSize = gl.getAttribLocation(gl.program, 'a_PointSize');
+        let a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+        let a_PointSize = gl.getAttribLocation(gl.program, 'a_PointSize');
 
         xs.scheduleRefreshFrame({fun:render});
         function render() {

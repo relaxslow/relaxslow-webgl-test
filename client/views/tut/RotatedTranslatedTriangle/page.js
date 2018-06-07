@@ -1,5 +1,5 @@
 //rotatedTriangle_matrix4
-Init = (param) => {
+Init = function(param) {
 
     let { parent, data } = param;
     xs.addStep('load lib|get shader|webgl main', 3);
@@ -14,14 +14,14 @@ Init = (param) => {
             '/client/lib/guild/cuon-matrix',
 
         ],
-        fun: () => {
+        fun: function() {
             xs.finishStep('load libs');
             webgl.getShaderSrcs({
                 files: [
                     "/client/views/tut/RotatedTranslatedTriangle/shader.vert",
                     "/client/views/tut/RotatedTranslatedTriangle/shader.frag"
                 ],
-                fun: (shaders) => {
+                fun: function(shaders){
                     xs.finishStep('get shader');
                     main({ shaders: shaders });
                     xs.finishStep('main');
@@ -33,7 +33,7 @@ Init = (param) => {
     function main(param) {
         let { shaders } = param;
         let canvas = parent.getElementsByClassName('webglCanvas')[0];
-        var gl = cuon.getWebGLContext(canvas);
+        let gl = cuon.getWebGLContext(canvas);
         if (gl == null) {
             xs.redAlert('webgl not support!!');
             return;
@@ -44,7 +44,7 @@ Init = (param) => {
             return;
         }
 
-        var n = initVertexBuffers(gl);
+        let n = initVertexBuffers(gl);
         if (n < 0) {
             console.log('Failed to set the positions of the vertices');
             return;
@@ -56,17 +56,17 @@ Init = (param) => {
         let Tx = 0.5, Ty = 0.5, Tz = 0;
         let Sx = 1.0, Sy = 1.5, Sz = 1.0;
         //----------------------------------------------------------------
-        var modelMatrix = new cuon.Matrix4();
+        let modelMatrix = new cuon.Matrix4();
         // modelMatrix.setScale(Sx, Sy, Sz);
         modelMatrix.setRotate(angle, 0, 0, 1);
         modelMatrix.translate(Tx, 0.0, 0.0);
         modelMatrix.scale(Sx,Sy,Sz);
 
         //----------------------------------------------------------------
-        var u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
+        let u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
         gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
 
-        var u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor');
+        let u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor');
         gl.uniform4f(u_FragColor, 1.0, 0.0, 0.0, 1.0);
 
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -88,14 +88,14 @@ Init = (param) => {
         gl.drawArrays(gl.TRIANGLE_FAN, 0, n);
     }
     function initVertexBuffers(gl) {
-        var vertices = new Float32Array([
+        let vertices = new Float32Array([
             0.0, 0.3, -0.3, -0.3, 0.3, -0.3
         ]);
 
-        var n = vertices.length / 2; // The number of vertices
+        let n = vertices.length / 2; // The number of vertices
 
         // Create a buffer object
-        var vertexBuffer = gl.createBuffer();
+        let vertexBuffer = gl.createBuffer();
         if (!vertexBuffer) {
             console.log('Failed to create the buffer object');
             return -1;
@@ -106,7 +106,7 @@ Init = (param) => {
         // Write date into the buffer object
         gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-        var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+        let a_Position = gl.getAttribLocation(gl.program, 'a_Position');
         if (a_Position < 0) {
             console.log('Failed to get the storage location of a_Position');
             return -1;

@@ -20,8 +20,8 @@ xs.init = function (param) {
         preTasks: ['loadLib'],
         fun: function (param) {
             let canvas = parent.getElementsByClassName('webglCanvas')[0];
-            var gl = canvas.getContext("webgl");
             // let gl = cuon.getWebGLContext(canvas);
+            var gl = canvas.getContext("webgl");
             if (gl == null) {
                 xs.redAlert(`webgl not support!!`);
                 return;
@@ -41,12 +41,11 @@ xs.init = function (param) {
         preTasks: ['init Webgl'],
         data: {
             files: [
-                { vert: `/client/views/tut/lightedCube/indicator`, frag: `/client/views/tut/lightedCube/simple` },
-                { vert: `/client/views/tut/lightedCube/CubePointLightPerFrag`, frag: `/client/views/tut/lightedCube/CubePointLightPerFrag` },
+                { vert: `/client/views/tut/${data.folder}/indicator`, frag: `/client/views/tut/${data.folder}/simple` },
+                { vert: `/client/views/tut/${data.folder}/CubePointLightPerFrag`, frag: `/client/views/tut/${data.folder}/CubePointLightPerFrag` },
                 { vert: `/client/views/tut/helloCube/rectangle`, frag: `/client/views/tut/helloCube/rectangle` },
                 { vert: `/client/views/tut/lightedCube/cubeDirectLight`, frag: `/client/views/tut/lightedCube/simple` },
-                { vert: `/client/views/tut/${data.folder}/treeLine`, frag: `/client/views/tut/${data.folder}/simple` },
-                { vert: `/client/views/tut/${data.folder}/triangles`, frag: `/client/views/tut/${data.folder}/simple` },
+
             ],
 
         },
@@ -82,7 +81,6 @@ xs.init = function (param) {
             context: param,
             frameRate: 30
         });
-        //res
 
         stage.addBuffers([
             {
@@ -173,17 +171,6 @@ xs.init = function (param) {
                 pointNum: 4
             },
             {
-                name: 'treeLine_Pos3_Color3_Index1',
-                verticeData: new Float32Array([
-                    0, 1, 0, 0.4, 1, 0.4, 0,// The back green one
-                    -0.5, -1, 0, 0.4, 1, 0.4, 1,
-                    0.5, -1, 0, 1, 0.4, 0.4, 2,
-
-                ]),
-                pointNum: 3
-
-            },
-            {
                 name: "sky",
                 img: imgs.sky_jpg,
                 texParam: {
@@ -217,7 +204,7 @@ xs.init = function (param) {
             }
 
         ]);
-        //camera
+
         stage.addCamera({
             name: 'camera',
             type: "perspective",
@@ -252,12 +239,12 @@ xs.init = function (param) {
         });
 
 
-        //box
+
         stage.addObj(
             {
                 name: "box",
                 program: programs["lightedCube-CubePointLightPerFrag"],
-                primitiveType: gl.LINE_STRIP,
+                primitiveType: gl.TRIANGLES,
                 attributes: [
                     {
                         name: "a_Position",
@@ -327,7 +314,7 @@ xs.init = function (param) {
 
             }
         );
-        //rectangle
+
         stage.addObj({
             name: 'rectangle',
             program: programs["helloCube-rectangle"],
@@ -369,6 +356,7 @@ xs.init = function (param) {
             init: function () {
                 this.angle = 0;
                 this.rotateSpeed = 45;
+            
             },
             update: function (elapsed) {//update
                 let newAngle = this.angle + (this.rotateSpeed * elapsed) / 1000.0;
@@ -404,74 +392,6 @@ xs.init = function (param) {
             ],
             ontop: 2
         });
-
-        //treeLine
-        let infos = [
-            { x: 0.75, y: 0, z: 0, r: 0.4, g: 1.0, b: 0.4 },
-            { x: -0.75, y: 0, z: 0, r: 0.4, g: 1.0, b: 0.4 },
-
-            { x: 0.75, y: 0, z: -2, r: 1.0, g: 1.0, b: 0.4 },
-            { x: -0.75, y: 0, z: -2, r: 1.0, g: 1.0, b: 0.4 },
-
-            { x: 0.75, y: 0, z: -4, r: 0.4, g: 0.4, b: 1.0 },
-            { x: -0.75, y: 0, z: -4, r: 0.4, g: 0.4, b: 1.0 },
-
-        ];
-        for (let i = 0; i < infos.length; i++) {
-            const info = infos[i];
-            stage.addObj({
-                name: `treeLines ${i}`,
-                program: programs["helloCube-treeLine"],
-                primitiveType: gl.TRIANGLES,
-                uniforms: [
-                    {
-                        name: "u_MVPMatrix",
-                        fun: webgl.mvpGeneralFun
-                    },
-                    {
-                        name: "u_Color",
-                        fun: colorFun
-                    },
-                ],
-
-                attributes: [
-                    {
-                        name: "a_Position",
-                        dataAmount: 3,
-                        beginIndex: 0,
-                        bufferName: "treeLine_Pos3_Color3_Index1",
-                    },
-                    {
-                        name: "a_Color",
-                        dataAmount: 3,
-                        beginIndex: 3,
-                        bufferName: "treeLine_Pos3_Color3_Index1",
-                    },
-                    {
-                        name: "a_Index",
-                        dataAmount: 1,
-                        beginIndex: 6,
-                        bufferName: "treeLine_Pos3_Color3_Index1",
-                    }
-
-                ],
-                init: treelineInit,
-                initData: { info: info },
-
-            });
-        }
-
-        function treelineInit(param) {
-            let { info } = param;
-
-            this.matrix.translate(info.x, info.y, info.z);
-
-        }
-        function colorFun(gl, part) {
-            let info = part.initData.info;
-            gl.uniform4f(this.location, info.r, info.g, info.b, 1);
-
-        }
 
 
         stage.beginAnimation();

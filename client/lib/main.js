@@ -1,28 +1,4 @@
-// xs.init = function () {
-//     // let test = new xs.Task({
-//     //     msg: "atest",
-//     //     fun: function () {
-//     //         console.log("atest!!");
-//     //         xs.TaskFinish(test, null);
-//     //     }
-//     // });
 
-//     // xs.allTaskGroups = [];
-//     // xs.allTranslateNode = [];
-//     // let identify = xs.identifyUser();
-
-
-//     // let xsroot = xs.initXSRoot();
-//     // xs.loadNewPage({
-//     //     socket: xsroot,
-//     //     file: '/client/views/index',
-//     //     preTaskGroup: 'identify'
-//     // });
-
-
-
-
-// };
 
 function defineLib(libName) {
     window.currentNamespace = libName;
@@ -491,7 +467,7 @@ xs.getTaskLevel = function (task) {
     function searchLevel(task, target) {
         if (target.parent != undefined) {
             task.level++;
-            let newIterate = searchLevel(task, target.parent);
+            searchLevel(task, target.parent);
         }
     }
 
@@ -909,6 +885,9 @@ xs.addNew = function (param) {
                     div.event = [];
                 if (div.libs == undefined)
                     div.libs = [];
+                if (div.animations == undefined) {
+                    div.animations = [];
+                }
                 div.root = div;
                 element.root.childRoot.push(div);
                 if (plug === "current") {
@@ -1047,17 +1026,17 @@ xs.addNew = function (param) {
         } else {
             skiproot = null;
         }
-        xs.iterateRoots({
-            root: xs.getRoot(),
-            fun: root => {
+        xs.iterateRoots(
+            xs.getRoot(),
+            function (root) {
                 for (let i = 0; i < root.cssComponents.length; i++) {
                     const cssComponent = root.cssComponents[i];
                     if (css === cssComponent.name)
                         return false;
                 }
             },
-            skip: skiproot
-        });
+            skiproot
+        );
 
 
         return true;
@@ -1089,59 +1068,65 @@ xs.fileExist = function (filePath, filetype, fun) {
         }
     });
 };
-xs.iterateRoots = function (params) {
-    let { root, fun, skip } = params;
-    fun(root);
-    if (root.childRoot != undefined) {
-        for (let j = 0; j < root.childRoot.length; j++) {
-            const childRoot = root.childRoot[j];
-            let newIterate;
-            if (!isSkipRoot(childRoot, skip))
-                newIterate = new xs.iterateRoots({ root: childRoot, fun: fun });
+xs.iterateRoots = function (root, fun, skipArr) {
+    if (!xs.isSkipRoot(root, skipArr)) {
+        fun(root);
+        if (root.childRoot != undefined) {
+            for (let j = 0; j < root.childRoot.length; j++) {
+                const childRoot = root.childRoot[j];
+                xs.iterateRoots(childRoot, fun, skipArr);
+            }
         }
     }
-    function isSkipRoot(root, skipArr) {
-        if (skipArr != undefined) {
-            for (let k = 0; k < skipArr.length; k++) {
-                const skiproot = skipArr[k];
-                if (skiproot != undefined) {
-                    if (skiproot == root)
-                        return true;
-                }
+
+
+
+};
+xs.isSkipRoot = function (root, skipArr) {
+    if (skipArr != undefined) {
+        for (let k = 0; k < skipArr.length; k++) {
+            const skiproot = skipArr[k];
+            if (skiproot != undefined) {
+                if (skiproot == root)
+                    return true;
             }
-            return false;
         }
         return false;
     }
+    return false;
 };
-
 
 
 xs.stopAllAnimation = function (plug) {
     if (plug == undefined)
         return;
     console.log("stop animation in old plug!");
-    xs.iterateRoots({
-        root: plug,
-        fun: function (root) {
-            root.animateable = false;
+    xs.iterateRoots(
+        plug,
+        function (root) {
+            for (let i = 0; i < root.animations.length; i++) {
+                const animation = root.animations[i];
+                animation.clean();
+            }
+            root.animations = null;
         }
-    });
+    );
 
 };
 
 xs.removeAllLibs = function (plug) {
     if (plug == undefined)
         return;
-    xs.iterateRoots({
-        root: plug,
-        fun: function (root) {
+    xs.iterateRoots(
+        plug,
+        function (root) {
             for (let i = 0; i < root.libs.length; i++) {
                 const lib = root.libs[i];
                 window[lib.nameSpace] = null;
             }
+            root.libs = null;
         }
-    });
+    );
 };
 xs.addScript = function (file, fun) {
     let script = document.createElement('script');
@@ -1304,47 +1289,34 @@ xs.checkUrlContentMatch = function () {
 xs.stopAllTimer = function (plug) {
     console.log("stop timer in old plug!");
     if (plug != undefined) {
-        xs.iterateRoots({
-            root: plug,
-            fun: (root) => {
+        xs.iterateRoots(
+            plug,
+            function (root) {
                 for (let i = 0; i < root.timers.length; i++) {
                     const timer = root.timers[i];
                     timer.stop();
                 }
+                root.timers = null;
             }
-        });
+        );
 
     }
 };
-xs.removeOldCss = function (plug) {
-    if (plug == undefined)
-        return;
-    xs.iterateRoots({
-        root: plug,
-        fun: (root) => {
-            for (let i = 0; i < root.cssComponents.length; i++) {
-                const cssComponent = root.cssComponents[i];
-                cssComponent.ref.parentNode.removeChild(cssComponent.ref);
-                cssComponent.ref = null;
-            }
-            root.cssComponents = null;
-        }
-    });
 
-};
 
 
 xs.removeAllListener = function (plug) {
     if (plug != undefined) {
-        xs.iterateRoots({
-            root: plug,
-            fun: function (root) {
+        xs.iterateRoots(
+            plug,
+            function (root) {
                 for (let i = 0; i < root.event.length; i++) {
                     const info = root.event[i];
                     info.element.removeEventListener(info.event, info.fun);
                 }
+                root.event = null;
             }
-        });
+        );
 
     }
 };
@@ -1364,9 +1336,9 @@ xs.disconnectPlug = function (plug) {
 xs.removeOldCss = function (plug) {
     if (plug == undefined)
         return;
-    xs.iterateRoots({
-        root: plug,
-        fun: (root) => {
+    xs.iterateRoots(
+        plug,
+        function (root) {
             for (let i = 0; i < root.cssComponents.length; i++) {
                 const cssComponent = root.cssComponents[i];
                 cssComponent.ref.parentNode.removeChild(cssComponent.ref);
@@ -1374,7 +1346,7 @@ xs.removeOldCss = function (plug) {
             }
             root.cssComponents = null;
         }
-    });
+    );
 
 };
 
@@ -1421,33 +1393,38 @@ xs.getElement = function (parent, className) {
 };
 //webgl
 defineLib('webgl');
+
 webgl.loadPrograms = function (param) {
-    let { files } = param;
-    let programs = { total: files.length };
+    let { files, gl } = param;
+    let programs = {};
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        new xs.Task({
-            msg: `load program${file}`,
-            data: { file: file, gl: param.gl, programs: programs },
-            fun: webgl.loadOneProgram
-        });
+
+        if (file.vert != undefined && file.frag != undefined) {
+            new xs.Task({
+                msg: `load program${file.vert}`,
+                data: { vert: file.vert, frag: file.frag, programs: programs },
+                fun: webgl.loadOneProgram
+            });
+        }
+        else {
+            xs.redAlert("must define both vert and frag src file path");
+        }
     }
-    webgl.programs = programs;
-    // param.task.finish({ programs: programs });
-    param.task.finish();
+    param.task.finish({ programs: programs });
 
 };
 webgl.loadOneProgram = function (param) {
     'use strict';
     new xs.Task({
         msg: `getVertexShader`,
-        data: { type: '.vert', file: param.file },
+        data: { type: '.vert', file: param.vert },
         fun: webgl.getShaderSrc
     });
 
     new xs.Task({
         msg: `getFragShader`,
-        data: { type: '.frag', file: param.file },
+        data: { type: '.frag', file: param.frag },
         fun: webgl.getShaderSrc
     });
 
@@ -1456,8 +1433,8 @@ webgl.loadOneProgram = function (param) {
         preTasks: [`getVertexShader`, `getFragShader`],
         data: param,
         fun: param => {
-            let { file, vertsrc, fragsrc, gl, programs } = param;
-            let nameArr = file.split('/');
+            let { vert, vertsrc, fragsrc, programs } = param;
+            let nameArr = vert.split('/');
             if (nameArr[0] === "")
                 nameArr.splice(0, 1);
             let fullName = `${nameArr[nameArr.length - 2]}-${nameArr[nameArr.length - 1]}`;
@@ -1467,7 +1444,7 @@ webgl.loadOneProgram = function (param) {
             //     if (j != nameArr.length - 1)
             //         fullName += '-';
             // }
-            programs[fullName] = webgl.createProgram(gl, vertsrc, fragsrc, fullName);
+            programs[fullName] = webgl.createProgram(webgl.gl, vertsrc, fragsrc, fullName);
             param.task.finish();
         }
     });
@@ -1499,10 +1476,10 @@ webgl.createProgram = function (gl, vertexCode, fragCode, name) {
     return program;
 };
 webgl.loadImgs = function (param) {
-    let { imgs } = param;
-    let imglib = { total: imgs.length };
-    for (let i = 0; i < imgs.length; i++) {
-        const img = imgs[i];
+    let { imgPaths, gl } = param;
+    let imglib = {};
+    for (let i = 0; i < imgPaths.length; i++) {
+        const img = imgPaths[i];
         new xs.Task({
             msg: `loadImg:${img}`,
             data: { imgPath: img, imglib: imglib },
@@ -1510,8 +1487,7 @@ webgl.loadImgs = function (param) {
         });
 
     }
-    webgl.imgs = imglib;
-    param.task.finish();
+    param.task.finish({ imgs: imglib });
 
 };
 webgl.loadOneImg = function (param) {
@@ -1519,6 +1495,7 @@ webgl.loadOneImg = function (param) {
     let img = new Image();
     img.src = imgPath;
     let shortName = imgPath.slice(imgPath.lastIndexOf("/") + 1, imgPath.indexOf("."));
+    img.filePath = shortName;
     let type = imgPath.slice(imgPath.indexOf(".") + 1);
     img.onload = function () {
         imglib[`${shortName}_${type}`] = img;
@@ -1550,6 +1527,7 @@ webgl.createVertexBuf = function (gl, param) {
 webgl.createIndiceBuf = function (gl, param) {
     let { name, indiceData } = param;
     let indiceBuf = gl.createBuffer();
+    indiceBuf.name = name;
     if (!indiceBuf) {
         xs.redAlert('Failed to create the buffer object');
         return;
@@ -1560,46 +1538,25 @@ webgl.createIndiceBuf = function (gl, param) {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
     return indiceBuf;
 };
-webgl.createTextureBuffer = function (gl, channel, image, texParam) {
-
+webgl.createTextureBuffer = function (gl, param) {
+    let { name, img, texParam } = param;
     let textureBuffer = gl.createTexture();
     if (!textureBuffer) {
         xs.redAlert('Failed to create the texture object');
         return;
     }
-
+    textureBuffer.name = name;
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
-    gl.activeTexture(gl[`TEXTURE${channel}`]);
+    gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, textureBuffer);
     for (let key in texParam) {
         gl.texParameteri(gl.TEXTURE_2D, gl[key], gl[texParam[key]]);
     }
 
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
     return textureBuffer;
 };
-webgl.createTexture = function (gl, channel, image, texParam) {
-    let texture = gl.createTexture();
-    if (!texture) {
-        xs.redAlert('Failed to create the texture object');
-        return;
-    }
 
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
-    gl.activeTexture(gl[`TEXTURE${channel}`]);
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    for (let key in texParam) {
-        gl.texParameteri(gl.TEXTURE_2D, gl[key], gl[texParam[key]]);
-    }
-    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-
-
-
-};
 
 
 webgl.getAttribLocation = function (gl, program, attributes) {
@@ -1618,50 +1575,71 @@ webgl.getAttribLocation = function (gl, program, attributes) {
 
     }
 };
+
+webgl.getLocation = function (gl, program, uniformName) {
+    let location = gl.getUniformLocation(program, uniformName);
+    if (location < 0) {
+        xs.redAlert(`Failed to get location of ${uniformName}`);
+        return;
+    }
+    return location;
+};
 webgl.getUniformLocation = function (gl, program, uniforms) {
-    for (let key in uniforms) {
-        const uniform = uniforms[key];
-        uniform.location = gl.getUniformLocation(program, uniform.name);
-        if (uniform.location < 0) {
-            xs.redAlert(`Failed to get location of ${uniform.name}`);
-            return;
-        }
+    for (let i = 0; i < uniforms.length; i++) {
+        const uniform = uniforms[i];
+        uniform.location = webgl.getLocation(gl, program, uniform.name);
+
     }
 
 };
 webgl.getTextureLocation = function (gl, program, useTextures) {
     for (let i = 0; i < useTextures.length; i++) {
-        const useTexture = useTextures[i];
-        useTexture.location = gl.getUniformLocation(program, useTexture.name);
-        if (!useTexture.location) {
-            xs.redAlert(`Failed to get the location of ${useTexture.name}`);
-            return;
-        }
+        const textureUniform = useTextures[i];
+        textureUniform.location = webgl.getLocation(gl, program, textureUniform.name);
+        textureUniform.texture = webgl.stage.textures[textureUniform.textureName];
     }
 };
 
-
+webgl.getLightLocation = function (gl, program, lights) {
+    for (let i = 0; i < lights.length; i++) {
+        const lightUniform = lights[i];
+        lightUniform.src = webgl.stage.lights[lightUniform.lightName];
+        lightUniform.location = webgl.getLocation(gl, program, lightUniform.name);
+    }
+};
+webgl.connectLight = function (gl, obj) {
+    if (obj.useLights != undefined) {
+        for (let i = 0; i < obj.useLights.length; i++) {
+            const lightUniform = obj.useLights[i];
+            lightUniform.fun(gl, lightUniform.src);
+        }
+    }
+};
 webgl.changeChannelTexture2D = function (gl, channel, texture) {
     gl.activeTexture(gl[`TEXTURE${channel}`]);
     gl.bindTexture(gl.TEXTURE_2D, texture);
 };
 
-webgl.connectTexture = function (gl, part) {
-    if (part.useTextures != undefined) {
-        for (let i = 0; i < part.useTextures.length; i++) {
-            const info = part.useTextures[i];
+webgl.connectTexture = function (gl, obj) {
+    if (obj.useTextures != undefined) {
+        for (let i = 0; i < obj.useTextures.length; i++) {
+            const info = obj.useTextures[i];
             webgl.changeChannelTexture2D(gl, info.channel, info.texture);
             gl.uniform1i(info.location, info.channel);
 
         }
     }
+
+
+
 };
-webgl.connectIndice = function (gl, part) {
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, part.indice);
+webgl.connectIndice = function (gl, obj) {
+    if (obj.indice != undefined)
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj.indice.buffer);
 };
-webgl.connectAttributes = function (gl, part) {
-    for (let i = 0; i < part.attributes.length; i++) {
-        const attribute = part.attributes[i];
+webgl.connectAttributes = function (gl, obj) {
+    for (let i = 0; i < obj.attributes.length; i++) {
+        const attribute = obj.attributes[i];
         gl.bindBuffer(gl.ARRAY_BUFFER, attribute.buffer);
         let FSIZE = attribute.buffer.FSIZE;
         let span = attribute.buffer.span;
@@ -1669,10 +1647,17 @@ webgl.connectAttributes = function (gl, part) {
         gl.enableVertexAttribArray(attribute.location);
     }
 };
-webgl.connectUniforms = function (gl, part) {
-    for (let key in part.uniforms) {
-        const uniform = part.uniforms[key];
-        uniform.fun(gl, part);
+webgl.connectUniforms = function (gl, obj, funParam) {
+    for (let key in obj.uniforms) {
+        const uniform = obj.uniforms[key];
+        uniform.fun(gl, funParam);
+    }
+};
+
+webgl.connectPickUniforms = function (gl, obj, param) {
+    for (let key in obj.pick.uniforms) {
+        const uniform = obj.pick.uniforms[key];
+        uniform.fun(gl, param);
     }
 };
 
@@ -1680,13 +1665,25 @@ webgl.connectUniforms = function (gl, part) {
 
 webgl.Camera = class {
     constructor() {
+        this.name = null;
+        this.type = null;
         this.matrix = new cuon.Matrix4();
-        this.pMatrix = new cuon.Matrix4();
-        this.vMatrix = new cuon.Matrix4();
+        this.pMatrix = new cuon.Matrix4();//perspect
+        this.vMatrix = new cuon.Matrix4();//view
+
 
     }
-    setName(name) {
-        this.name = name;
+    setPerspective(fov, aspect, near, far) {
+        this.fov = fov;
+        this.aspect = aspect;
+        this.near = near;
+        this.far = far;
+        this.buildPMatrix();
+    }
+    buildPMatrix() {
+        let { vMatrix, pMatrix, matrix, fov, aspect, near, far } = this;
+        pMatrix.setPerspective(fov, aspect, near, far);
+        matrix.set(pMatrix).multiply(vMatrix);
     }
     setLookAt(eyeX, eyeY, eyeZ, atX, atY, atZ, upX, upY, upZ) {
         this.eyeX = eyeX;
@@ -1703,6 +1700,11 @@ webgl.Camera = class {
         this.buildVMatrix();
 
     }
+    buildVMatrix() {
+        let { vMatrix, pMatrix, matrix, eyeX, eyeY, eyeZ, atX, atY, atZ, upX, upY, upZ } = this;
+        vMatrix.setLookAt(eyeX, eyeY, eyeZ, atX, atY, atZ, upX, upY, upZ);
+        matrix.set(pMatrix).multiply(vMatrix);
+    }
     setOrtho(left, right, bottom, top, near, far) {
         this.left = left;
         this.right = right;
@@ -1710,365 +1712,604 @@ webgl.Camera = class {
         this.top = top;
         this.near = near;
         this.far = far;
-        this.buildOrthoPMatrix();
-    }
-    setPerspective(fov, aspect, near, far) {
-        this.fov = fov;
-        this.aspect = aspect;
-        this.near = near;
-        this.far = far;
-        this.buildPerspectivePMatrix();
-    }
-    buildVMatrix() {
-        this.vMatrix.setLookAt(this.eyeX, this.eyeY, this.eyeZ, this.atX, this.atY, this.atZ, this.upX, this.upY, this.upZ);
-        this.matrix.set(this.pMatrix).multiply(this.vMatrix);
-    }
-    buildOrthoPMatrix() {
-        this.pMatrix.setOrtho(this.left, this.right, this.bottom, this.top, this.near, this.far);
-        this.matrix.set(this.pMatrix).multiply(this.vMatrix);
-    }
-    buildPerspectivePMatrix() {
-        this.pMatrix.setPerspective(this.fov, this.aspect, this.near, this.far);
-        this.matrix.set(this.pMatrix).multiply(this.vMatrix);
+        let { vMatrix, pMatrix, matrix } = this;
+        pMatrix.setOrtho(left, right, bottom, top, near, far);
+        matrix.set(pMatrix).multiply(vMatrix);
     }
 };
-webgl.setName = function (obj, name) {
-    obj.name = name;
-};
-// webgl.StageManager = class {
-//     constructor() {
-//         webgl.stageManager = this;
-//         this.stages = [];
+webgl.Light = class {
+    constructor() {
+        this.name = null;
+        this.type = null;
+        this.color = null;
 
-//     }
-//     addStage(stage) {
-//         this.stages.push(stage);
-//     }
-//     addAnimation(animation) {
-//         this.animation = animation;
-//     }
-// }
+    }
+
+};
+webgl.Obj = class {
+    constructor() {
+        this.modelMatrix = new cuon.Matrix4(); //combine by parent|transform|operate|matrix
+
+        this.parentMatrix = new cuon.Matrix4();//accumulate from parent 
+        this.transformMatrix = new cuon.Matrix4();//clear every frame, better use to animate object
+        this.operateMatrix = new cuon.Matrix4();//not clear every frame, use to place object or transform  object by user input
+        this.matrix = new cuon.Matrix4();//most private Matrix, define object center
+
+
+        this.normalMatrix = new cuon.Matrix4();//use to calculate light
+
+        this.objs = [];
+        this.ontop = [];
+    }
+    addChild(obj) {
+        webgl.addChild(this, obj);
+    }
+
+};
 webgl.Stage = class {
-    constructor(imgs, programs) {
-        // this.canvas = canvas;
-        // this.gl = gl;
-        webgl.animation.stage = this;
-        this.imgs = imgs;
-        this.programs = programs;
+    constructor(param) {
+        let { context, frameRate, backColor } = param;
+
+        this.frameRate = frameRate;
+        webgl.stage = this;
+        context.parent.root.animations.push(this);
+        this.programs = context.programs;
+        // this.imgs = context.imgs;
+
+        this.cameras = {};
+        this.buffers = {};
+        this.textures = {};
+        this.lights = {};
 
         this.ontop = [];
         this.objs = [];
 
         this.camera = null;
-        this.mvpMatrix = new cuon.Matrix4();
+        this.mvpMatrix = new cuon.Matrix4();//all obj share one mvpMatrix to render
+        this.parentMatrix = new cuon.Matrix4();//accumulate frome parent to child 
 
+        if (backColor != undefined)
+            this.setBackGroundColor(backColor);
+        else
+            this.setBackGroundColor([0, 0, 0]);
+        this.pickColors = [
+            [255, 0, 0],
+            [0, 255, 0],
+            [0, 0, 255],
+            [255, 255, 0],
+            [0, 255, 255],
+            [255, 0, 255],
+            [128, 0, 0],
+            [0, 128, 0],
+            [0, 0, 128],
+        ];
+        this.pickPixels = new Uint8Array(4);//gl.readPixel return 255 based number
+
+
+        this.clicked = 0;
+    }
+
+    beginAnimation() {
+        this.last = Date.now();
+        this.loop();
+    }
+    animationLoop() {
+
+    }
+    loop() {
+        let stage = webgl.stage;
+        stage.animationId = requestAnimationFrame(stage.loop);
+        let now = Date.now();
+        let elapsed = now - stage.last; // milliseconds
+        if (elapsed < 1000 / stage.framerate)
+            return;
+        stage.last = now;
+
+        stage.clear();
+        stage.render(elapsed);
+    }
+    clean() {
+        cancelAnimationFrame(this.animationId);
+        this.camera = null;
+        this.cleanGroup(this.objs);
+        this.cleanGroup(this.ontop);
+
+
+
+        for (let key in this.buffers) {
+            webgl.gl.deleteBuffer(this.buffers[key]);
+        }
+        this.buffers = null;
+        for (let key in this.textures) {
+            webgl.gl.deleteTexture(this.textures[key]);
+        }
+
+        this.textures = null;
+
+        for (let key in this.programs) {
+            webgl.gl.deleteProgram(this.programs[key]);
+        }
+        this.programs = null;
+        // for (let key in this.imgs) {
+        //     this.imgs[key] = null;
+        // }
+        // this.imgs = null;
+        this.cameras = null;
+        this.lights = null;
+
+        webgl.stage = null;
+        webgl.gl = null;
+        //         this.task.finish();
 
     }
 
+    cleanGroup(group) {
+        for (let i = 0; i < group.length; i++) {
+            const obj = group[i];
+            this.cleanObj(obj);
+        }
+        group.length = 0;
+    }
+    addCamera(param) {
+        let { name, type, position, lookAt, up, fov, aspect, near, far } = param;
+        let camera = new webgl.Camera();
+
+        camera.setLookAt(position[0], position[1], position[2], lookAt[0], lookAt[1], lookAt[2], up[0], up[1], up[2]);
+        camera.setPerspective(fov, aspect, near, far);
+        camera.name = name;
+        camera.type = type;
+        this.cameras[name] = camera;
+    }
+    useCamera(name) {
+        this.camera = this.cameras[name];
+        if (!(this.camera instanceof webgl.Camera))
+            xs.redAlert(`can't find camera ${name}`);
+    }
+    addBuffer(param) {
+        let { name, verticeData, pointNum } = param;
+        this.buffers[name] = webgl.createVertexBuf(webgl.gl, param);
+    }
+    addIndice(param) {
+        let { name, indiceData } = param;
+        this.buffers[name] = webgl.createIndiceBuf(webgl.gl, param);
+    }
+    addTexBuffer(param) {
+        let { name, img, texParam } = param;
+        this.textures[name] = webgl.createTextureBuffer(webgl.gl, param);
+    }
+    addImgs(imgs) {
+        this.imgs = imgs;
+    }
+    addPrograms(programs) {
+        this.programs = programs;
+    }
+    addBuffers(resArr) {
+        for (let i = 0; i < resArr.length; i++) {
+            const res = resArr[i];
+
+            if (res.verticeData != undefined)
+                this.addBuffer(res);
+            else if (res.indiceData != undefined)
+                this.addIndice(res);
+            else if (res.img != undefined && res.texParam != undefined) {
+                this.addTexBuffer(res);
+            }
+        }
+
+    }
+
+    cleanObj(obj) {
+        obj.name = null;
+        obj.program = null;
+        obj.primitiveType = null;
+        obj.uniform = null;
+        obj.attributes = null;
+        obj.indice = null;
+        obj.useTextures = null;
+        obj.useLights = null;
+        obj.init = null;
+        obj.initData = null;
+        obj.update = null;
+        obj.ontop = null;
+
+    }
+    createObj(param) {
+        let {
+            name,
+            program,
+            primitiveType,
+            attributes,
+            indice,
+            uniforms,
+            useLights,
+            useTextures,
+            ontop,
+            init,
+            initData,
+            update,
+            selected
+        } = param;
+        let obj = new webgl.Obj();
+        obj.name = name;
+
+
+        obj.program = program;
+        if (obj.program == undefined)
+            xs.redAlert("specified  program is  not found ");
+
+        obj.primitiveType = primitiveType;
+
+        obj.attributes = attributes;
+        this.attachBuffer(obj.attributes);
+        webgl.getAttribLocation(webgl.gl, obj.program, obj.attributes);
+
+        obj.indice = indice;
+        if (obj.indice == undefined) {
+            if (obj.first == undefined) obj.first = 0;
+            if (obj.count == undefined) obj.count = obj.attributes[0].buffer.num;
+        }
+        else {
+            obj.indice.buffer = this.buffers[obj.indice.bufferName];
+            if (obj.offset == undefined) obj.offset = 0;
+            if (obj.count == undefined) obj.count = obj.indice.buffer.num;
+            if (obj.indiceDataType == undefined) obj.indiceDataType = webgl.gl.UNSIGNED_BYTE;
+        }
+
+        obj.uniforms = uniforms;
+        webgl.getUniformLocation(webgl.gl, obj.program, obj.uniforms);
+
+
+        obj.useLights = useLights;
+        if (obj.useLights != undefined)
+            webgl.getLightLocation(webgl.gl, obj.program, obj.useLights);
+
+
+        obj.useTextures = useTextures;
+        if (obj.useTextures != undefined)
+            webgl.getTextureLocation(webgl.gl, obj.program, obj.useTextures);
+
+        obj.ontop = ontop;
+        obj.init = init;
+        obj.initData = initData;
+        obj.update = update;
+
+        if (selected != undefined) {
+            obj.pick = {};
+            obj.pick.program = this.programs["pickObj-pick"];
+            obj.pick.attributes = [];
+            let a_positon = this.findAttribute(obj, 'a_Position');
+            obj.pick.attributes.push(a_positon);
+            webgl.getAttribLocation(webgl.gl, obj.pick.program, obj.pick.attributes);
+            obj.pick.uniforms = [
+
+                {
+                    name: "u_MVPMatrix",
+                    fun: webgl.mvpGeneralFun
+                },
+
+                {
+                    name: "u_PickColor",
+                    fun: webgl.pickcolorGeneralFun,
+
+                }
+            ];
+            webgl.getUniformLocation(webgl.gl, obj.pick.program, obj.pick.uniforms);
+            obj.pick.color = webgl.getPickColor();
+            obj.isSelected = false;
+            obj.selected = selected;
+            this.attachBuffer(obj.selected.attributes);
+            webgl.getAttribLocation(webgl.gl, obj.selected.program, obj.selected.attributes);
+            webgl.getUniformLocation(webgl.gl, obj.selected.program, obj.selected.uniforms);
+        }
+        return obj;
+    }
+    attachBuffer(attributes) {
+        for (let i = 0; i < attributes.length; i++) {
+            const attribute = attributes[i];
+            attribute.buffer = this.buffers[attribute.bufferName];
+        }
+    }
+    findAttribute(obj, name) {
+        for (let i = 0; i < obj.attributes.length; i++) {
+            const attribute = obj.attributes[i];
+            if (attribute.name === name)
+                return attribute;
+        }
+        xs.redAlert(`can't find attribute ${name}`);
+    }
+    addObj(param) {
+        let obj = this.createObj(param);
+
+        this.addChild(obj);
+
+    }
+
+    getObj(name) {
+        let result = webgl.iterateChild(this, 'objs', function (param) {
+            let { obj, name } = param;
+            if (obj.name === name) {
+                return obj;
+            }
+            return null;
+        }, { name: name });
+        // let result = webgl.searchObjTree(this, name);
+        if (result == null)
+            xs.redAlert(`can't find obj ${name}`);
+        return result;
+    }
+    addChild(obj) {
+        webgl.addChild(this, obj);
+    }
+    addLight(param) {
+        let { type, name, color, direct, position } = param;
+        let light = new webgl.Light();
+        light.name = name;
+        light.type = type;
+        light.color = new cuon.Vector3(color);
+        if (type === "directLight") {
+            light.direct = new cuon.Vector3(direct);
+            light.direct.normalize();
+        } else if (type === "pointLight") {
+            light.position = new cuon.Vector3(position);
+        }
+        this.lights[light.name] = light;
+    }
 
     clear() {
         let gl = webgl.gl;
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);   // Clear <canvas>
-        gl.enable(gl.POLYGON_OFFSET_FILL);
+        // gl.enable(gl.POLYGON_OFFSET_FILL);
         //                 gl.enable(gl.POLYGON_OFFSET_LINE);
     }
-    useCamera(camera) {
-        this.camera = camera;
-        this.camera.init();
-    }
-    addChild(obj) {
+    setBackGroundColor(param) {
+        let [r, g, b] = param;
+        this.backColor = param;
+        webgl.gl.clearColor(r, g, b, 1.0);
 
-        obj.init();
-
-        webgl.initParts(obj.parts);
-
-
-        if (obj.ontop != undefined) {
-            let insertIndex = this.ontop.length;
-            for (let i = 0; i < this.ontop.length; i++) {
-                const o = this.ontop[i];
-                if (obj.ontop < o.ontop)
-                    insertIndex = i - 1;
-            }
-            this.ontop.splice(insertIndex, 0, obj);
-        }
-        else
-            this.objs.push(obj);
     }
 
     render(elapsed) {
+        this.parentMatrix.setIdentity();
+        webgl.iterateChild(this, 'objs', webgl.render, { elapsed: elapsed });
 
-        for (let i = 0; i < this.objs.length; i++) {
-            const obj = this.objs[i];
-            // if (obj.ontop == true)
-            //     gl.clear(gl.DEPTH_BUFFER_BIT);
-            webgl.renderParts(obj.parts, elapsed);
+        this.parentMatrix.setIdentity();
+        webgl.iterateChild(this, 'ontop', webgl.renderOntop, { elapsed: elapsed });
 
+    }
+
+    renderPickColor(elapsed) {
+        let stage = webgl.stage;
+        let backupColor = stage.backColor.slice();
+        stage.setBackGroundColor([0.5, 0.5, 0.5]);
+        stage.clear();
+
+        this.parentMatrix.setIdentity();
+        webgl.iterateChild(this, 'objs', webgl.renderEffect, { effectName: 'pick', elapsed: elapsed });
+
+
+        stage.setBackGroundColor(backupColor);
+    }
+
+
+};
+webgl.renderOntop = function (param) {
+    let gl = webgl.gl;
+    gl.clear(gl.DEPTH_BUFFER_BIT);
+    webgl.renderEffect(param);
+};
+webgl.renderEffect = function (param) {
+    let { effectName, obj, elapsed } = param;
+    let gl = webgl.gl;
+    let collection;
+    if (effectName == undefined)
+        collection = obj;
+    else
+        collection = obj[effectName];
+    if (collection == undefined) return;
+    gl.useProgram(collection.program);
+
+    obj.transformMatrix.setIdentity();
+    if (obj.update != undefined) obj.update(elapsed);
+
+    webgl.connectAttributes(gl, collection);
+    webgl.connectIndice(gl, obj);
+    webgl.calculateMatrix(obj);
+    webgl.connectUniforms(gl, collection, obj);
+    webgl.connectTexture(gl, collection);
+    webgl.connectLight(gl, collection);
+    webgl.draw(gl, obj);
+
+};
+// webgl.renderSelected = function (param) {
+//     let { obj, elapsed } = param;
+//     let gl = webgl.gl;
+//     if (obj.selected == undefined) return;
+//     gl.useProgram(obj.selected.program);
+
+//     obj.transformMatrix.setIdentity();
+//     if (obj.update != undefined) obj.update(elapsed);
+
+
+//     webgl.connectAttributes(gl, obj.selected);
+//     webgl.connectIndice(gl, obj);
+//     webgl.calculateMatrix(obj);
+//     webgl.connectUniforms(gl, obj.selected, obj);
+//     webgl.connectTexture(gl, obj.selected);
+//     webgl.connectLight(gl, obj.selected);
+
+//     webgl.draw(gl, obj);
+// };
+// webgl.renderRegular = function (param) {
+//     let { obj, elapsed } = param;
+//     let gl = webgl.gl;
+//     gl.useProgram(obj.program);
+
+//     obj.transformMatrix.setIdentity();
+//     if (obj.update != undefined) obj.update(elapsed);
+
+
+//     webgl.connectAttributes(gl, obj);
+//     webgl.connectIndice(gl, obj);
+//     webgl.calculateMatrix(obj);
+//     webgl.connectUniforms(gl, obj, obj);
+//     webgl.connectTexture(gl, obj);
+//     webgl.connectLight(gl, obj);
+
+//     webgl.draw(gl, obj);
+// };
+webgl.render = function (param) {
+    let { obj } = param;
+    if (obj.isSelected == true) {
+        param.effectName = 'selected';
+        webgl.renderEffect(param);
+        param.effectName = undefined;
+    }
+    else
+        webgl.renderEffect(param);
+
+
+};
+
+// webgl.searchObjTree = function (root, name) {
+//     let result = null;
+//     for (let i = 0; i < root.objs.length; i++) {
+//         const child = root.objs[i];
+//         if (child.name === name)
+//             return child;
+//         else
+//             result = new webgl.searchObjTree(child, name);
+//     }
+//     return result;
+// };
+webgl.iterateChild = function (obj, arrName, fun, param) {
+    let result;
+    if (obj[arrName] != undefined) {
+        for (let j = 0; j < obj[arrName].length; j++) {
+            const child = obj[arrName][j];
+            if (param == undefined) param = {};
+            param.obj = child;
+            result = fun(param);
+            if (result != null)
+                return result;
+            else {
+                result = webgl.iterateChild(child, arrName, fun, param);
+                if (result != null)
+                    return result;
+            }
         }
-        for (let i = 0; i < this.ontop.length; i++) {
-            const obj = this.ontop[i];
-            webgl.gl.clear(webgl.gl.DEPTH_BUFFER_BIT);
-            webgl.renderParts(obj.parts, elapsed);
-
-        }
-    }
-    clean() {
-        this.camera = null;
-        this.cleanGroup(this.objs);
-        this.cleanGroup(this.ontop);
-    }
-    cleanGroup(group) {
-        for (let i = 0; i < group.length; i++) {
-            const obj = group[i];
-            obj.clean();
-        }
-    }
-
-
-};
-webgl.mvpGeneralFun = function mvpGeneralFun(gl, part) {
-    let stage = webgl.animation.stage;
-    stage.mvpMatrix.set(stage.camera.matrix).multiply(part.matrix);
-    gl.uniformMatrix4fv(part.uniforms.MVP.location, false, stage.mvpMatrix.elements);
-};
-
-webgl.Animation = class {
-    constructor(param) {
-        let { frameRate } = param;
-        webgl.animation = this;
-        this.frameRate = frameRate;
-
-    }
-
-
-    begin(parent, stage) {
-        this.parent = parent;
-        this.stage = stage;
-
-        this.last = Date.now();
-        this.loop();
-    }
-    loop() {
-        let animation = webgl.animation;
-        if (animation.parent.root.animateable == false) {
-            animation.clean();
-
-            return;
-        }
-
-        animation.id = requestAnimationFrame(animation.loop);
-        let now = Date.now();
-        let elapsed = now - animation.last; // milliseconds
-        if (elapsed < 1000 / animation.framerate)
-            return;
-        animation.last = now;
-
-        animation.stage.clear();
-        animation.stage.render(elapsed);
-    }
-    clean() {
-        cancelAnimationFrame(this.id);
-
-        this.parent = null;
-        this.stage.clean();
-        this.stage = null;
-
-        webgl.animation = null;
-        webgl.gl = null;
-        webgl.imgs = null;
-        // this.removeGPUPrograms();
-        webgl.programs = null;
     }
 
 };
 
-
-webgl.initParts = function (parts) {
-    for (let i = 0; i < parts.length; i++) {
-        const part = parts[i];
-        if (part.init != undefined)
-            part.init(part.data);
-    }
+webgl.calculateMatrix = function (obj) {
+    obj.parentMatrix.setIdentity().multiply(obj.parent.parentMatrix).multiply(obj.transformMatrix).multiply(obj.operateMatrix);
+    obj.modelMatrix.setIdentity().multiply(obj.parentMatrix).multiply(obj.matrix);
 };
-webgl.renderParts = function (parts, elapsed) {
-    for (let j = 0; j < parts.length; j++) {
-        const part = parts[j];
-        webgl.gl.useProgram(part.program);
-
-        if (part.update != undefined) part.update(elapsed);
-
-        webgl.connectAttributes(webgl.gl, part);
-        webgl.connectIndice(webgl.gl, part);
-        webgl.connectUniforms(webgl.gl, part);
-        webgl.connectTexture(webgl.gl, part);
-
-        // if (part.polygonOffset != undefined) {
-        //     gl.polygonOffset(part.polygonOffset.factor, part.polygonOffset.unit); // Set the polygon offset
-        // }
-        // else {
-        //     gl.polygonOffset(1, 100);
-        // }
-        webgl.drawPart(webgl.gl, part);
-
-    }
+webgl.mvpGeneralFun = function mvpGeneralFun(gl, obj) {
+    let stage = webgl.stage;
+    stage.mvpMatrix.set(stage.camera.matrix).multiply(obj.modelMatrix);
+    gl.uniformMatrix4fv(this.location, false, stage.mvpMatrix.elements);
 };
 
-webgl.drawPart = function (gl, part) {
-    if (part.indice == undefined) {
-        gl.drawArrays(part.primitiveType, part.first, part.count); //POINTS//TRIANGLES//TRIANGLE_STRIP
+webgl.modelGeneralFun = function modelGeneralFun(gl, obj) {
+    gl.uniformMatrix4fv(this.location, false, obj.modelMatrix.elements);
+};
+webgl.normalGeneralFun = function normalGeneralFun(gl, obj) {
+
+    obj.normalMatrix.setInverseOf(obj.modelMatrix);
+    obj.normalMatrix.transpose();
+    gl.uniformMatrix4fv(this.location, false, obj.normalMatrix.elements);
+};
+
+webgl.pickcolorGeneralFun = function colorGeneralFun(gl, obj) {
+    let color = obj.pick.color;
+    gl.uniform4f(this.location, color[0] / 255, color[1] / 255, color[2] / 255, 1);
+
+};
+webgl.selectedGeneralFun = function sendSelectedColorsToShader(gl, obj) {
+    let color = [1, 0, 0];
+    gl.uniform4f(this.location, color[0], color[1], color[2], 1);
+};
+
+webgl.draw = function (gl, obj) {
+
+    if (obj.indice == undefined) {
+        gl.drawArrays(obj.primitiveType, obj.first, obj.count); //POINTS//TRIANGLES//TRIANGLE_STRIP
     } else {
-        gl.drawElements(part.primitiveType, part.count, part.indiceDataType, part.offset);
+        gl.drawElements(obj.primitiveType, obj.count, obj.indiceDataType, obj.offset);
     }
 };
-webgl.Obj = class {
-    constructor() {
-        this.buffers = {};
-        this.textures = {};
-        this.parts = [];
-    }
-    addBuffer(param) {
-        let { name, verticeData, pointNum } = param;
-        let buffer = webgl.createVertexBuf(webgl.gl, param);
-        this.buffers[name] = buffer;
-    }
-    addIndice(param) {
-        let { name, indiceData } = param;
-        let buffer = webgl.createIndiceBuf(webgl.gl, param);
-        this.buffers[name] = buffer;
-    }
-    addTexBuffer(param) {
-        let { name, channel, img, texParam } = param;
-        let buffer = webgl.createTextureBuffer(webgl.gl, 0, img, texParam);
-        this.textures[name] = buffer;
-    }
-    addPart(part) {
-        part.parent = this;
-        this.parts.push(part);
-        this.createPart(part);
-    }
-    clean() {
-        this.stage = null;
-        this.name = null;
-        this.cleanParts();
-        this.removeGPUTexture();
-        this.removeGPUBuffer();
-        this.parts = null;
-        this.buffers = null;
-        this.textures = null;
 
 
-    }
-    cleanParts() {
-        for (let i = 0; i < this.parts.length; i++) {
-            const part = this.parts[i];
-            part.program = null;
-            part.uniform = null;
-            part.attributes = null;
-            part.useTextures = null;
-            part.init = null;
-            part.update = null;
+
+webgl.addChild = function (parent, child) {
+    child.parent = parent;
+    if (child.ontop != undefined) {
+        let insertIndex = parent.ontop.length;
+        for (let i = 0; i < parent.ontop.length; i++) {
+            const o = parent.ontop[i];
+            if (child.ontop < o.ontop)
+                insertIndex = i - 1;
         }
+        parent.ontop.splice(insertIndex, 0, child);
     }
-    removeGPUTexture() {
-        for (let i = 0; i < this.textures.length; i++) {
-            const texture = this.textures[i];
-            webgl.gl.deleteTexture(texture);
-        }
-    }
-    removeGPUBuffer() {
-        for (let i = 0; i < this.buffers.length; i++) {
-            const buffer = this.buffers[i];
-            webgl.gl.deleteBuffer(buffer);
-        }
-    }
-    setName(name) {
-        this.name = name;
-    }
-
-
-    // setPart(gl, parts) {
-    //     for (let i = 0; i < parts.length; i++) {
-    //         const part = parts[i];
-    //         this.createPart(gl, part);
-    //     }
-    //     this.parts = parts;
-    // }
-    createPart(part) {
-        part.matrix = new cuon.Matrix4();
-
-        if (part.indice == undefined) {
-            if (part.first == undefined) part.first = 0;
-            if (part.count == undefined) part.count = part.attributes[0].buffer.num;
-        }
-        else {
-            if (part.offset == undefined) part.offset = 0;
-            if (part.count == undefined) part.count = part.indice.num;
-            if (part.indiceDataType == undefined) part.indiceDataType = webgl.gl.UNSIGNED_BYTE;
-        }
-        if(part.program==undefined)
-        xs.redAlert("specified  program is  not found ");
-        webgl.getUniformLocation(webgl.gl, part.program, part.uniforms);
-        webgl.getAttribLocation(webgl.gl, part.program, part.attributes);
-        if (part.useTextures != undefined)
-            webgl.getTextureLocation(webgl.gl, part.program, part.useTextures);
-
+    else
+        parent.objs.push(child);
+    if (child.init != undefined) {
+        child.matrix.setIdentity();
+        child.init(child.initData);
     }
 
 
 };
 
+webgl.getPickColor = function () {
+    let pickColors = webgl.stage.pickColors;
+    let index = Math.floor(Math.random() * pickColors.length);
+    let color = pickColors[index];
+    pickColors.splice(index, 1);
+    return color;
+};
+xs.Timer = class {
+    constructor(param) {
+        let {
+            fun,
+            parent,
+            interval
+        } = param;
+        if (interval == undefined)
+            interval = 1000;
+        let id = 0;
+        this.counter = 0;
+        parent.root.timers.push(this);
+        let root = xs.getRoot();
+        root.scheduleTimer.push(this);
 
-// webgl.Part = class {
+    }
+    begin() {
+        id = setInterval(function () {
+            fun(this);
+        }, interval);
+    }
+    stop() {
+        clearInterval(id);
+        this.reset();
+        id = 0;
+    }
+    reset() {
+        this.counter = 0;
+    }
+    run() {
+        this.counter += interval;
+    }
+    getTimeCount() {
+        return this.counter;
+    }
+    isStopped() {
+        if (id == 0)
+            return true;
+        else return false;
+    }
+};
 
-//     setProgram(program) {
-//         this.program = program;
-//     }
-//     setPrimitiveType(type) {
-//         this.primitiveType = type;
-//     }
-//     setUniform(uniforms) {
-//         this.uniforms = uniforms;
-//     }
-//     setAttributes(attributes) {
-//         this.attributes = attributes;
-//     }
-//     setIndice(buffer) {
-//         this.indice = buffer;
-//     }
-//     setInit(fun) {
-//         this.init = fun;
-//     }
-//     setUpdate(fun) {
-//         this.update = fun;
-//     }
-//     setMaterial(fun) {
-//         this.material = fun;
-//     }
-// };
-
-// webgl.Texture = class {
-//     constructor(param) {
-//         let { channel, buffer, sampler } = param;
-//         this.channel = channel;
-//         this.buffer = buffer;
-//         this.sampler = sampler;
-//     }
-// };
-// webgl.Attributes = class {
-//     constructor(param) {
-//         let { name, dataAmount, beginIndex, buffer } = param;
-//         this.name = name;
-//         this.dataAmount = dataAmount;
-//         this.beginIndex = beginIndex;
-//         this.buffer = buffer;
-//     }
-// };
-
-// webgl.Uniform = class {
-//     constructor(param) {
-//         let { name, fun } = param;
-//         this.name = name;
-//         this.fun = fun;
-//     }
-// };
 

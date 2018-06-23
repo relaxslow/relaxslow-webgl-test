@@ -1588,7 +1588,7 @@ webgl.getUniformLocation = function (gl, program, uniforms) {
     for (let i = 0; i < uniforms.length; i++) {
         const uniform = uniforms[i];
         uniform.location = webgl.getLocation(gl, program, uniform.name);
-
+        uniform.fun = webgl.uniformFunctions[uniform.funName];
     }
 
 };
@@ -1605,6 +1605,7 @@ webgl.getLightLocation = function (gl, program, lights) {
         const lightUniform = lights[i];
         lightUniform.src = webgl.stage.lights[lightUniform.lightName];
         lightUniform.location = webgl.getLocation(gl, program, lightUniform.name);
+        lightUniform.fun = webgl.uniformFunctions[lightUniform.funName];
     }
 };
 webgl.connectLight = function (gl, obj) {
@@ -1769,9 +1770,10 @@ webgl.Stage = class {
         this.parentMatrix = new cuon.Matrix4();//accumulate frome parent to child 
 
         if (backColor != undefined)
-            this.setBackGroundColor(backColor);
+            this.backColor = backColor;
         else
-            this.setBackGroundColor([0, 0, 0]);
+            this.backColor = [0, 0, 0];
+        this.setBackGroundColor(this.backColor);
         this.pickColors = [
             [255, 0, 0],
             [0, 255, 0],
@@ -1913,7 +1915,16 @@ webgl.Stage = class {
         obj.ontop = null;
 
     }
-    createObj(param) {
+    combineData(userDefinedData, objTemplates) {//private
+        if (objTemplates == undefined) return;
+        for (let i = 0; i < objTemplates.length; i++) {
+            const objTemp = objTemplates[i];
+            userDefinedData = Object.assign(userDefinedData, objTemp.copy());
+        }
+        return userDefinedData;
+    }
+    createObj(userDefinedData, preDefinedPropertys) {
+        this.combineData(userDefinedData, preDefinedPropertys);
         let {
             name,
             program,
@@ -1928,12 +1939,12 @@ webgl.Stage = class {
             initData,
             update,
             selected
-        } = param;
+        } = userDefinedData;
         let obj = new webgl.Obj();
         obj.name = name;
 
 
-        obj.program = program;
+        obj.program = this.programs[program];
         if (obj.program == undefined)
             xs.redAlert("specified  program is  not found ");
 
@@ -1981,15 +1992,14 @@ webgl.Stage = class {
             obj.pick.attributes.push(a_positon);
             webgl.getAttribLocation(webgl.gl, obj.pick.program, obj.pick.attributes);
             obj.pick.uniforms = [
-
                 {
                     name: "u_MVPMatrix",
-                    fun: webgl.mvpGeneralFun
+                    funName: "mvp"
                 },
 
                 {
                     name: "u_PickColor",
-                    fun: webgl.pickcolorGeneralFun,
+                    funName: "pickColor",
 
                 }
             ];
@@ -1997,6 +2007,8 @@ webgl.Stage = class {
             obj.pick.color = webgl.getPickColor();
             obj.isSelected = false;
             obj.selected = selected;
+
+            obj.selected.program = this.programs[obj.selected.program];
             this.attachBuffer(obj.selected.attributes);
             webgl.getAttribLocation(webgl.gl, obj.selected.program, obj.selected.attributes);
             webgl.getUniformLocation(webgl.gl, obj.selected.program, obj.selected.uniforms);
@@ -2040,6 +2052,9 @@ webgl.Stage = class {
     addChild(obj) {
         webgl.addChild(this, obj);
     }
+    removeChild(obj) {
+        //return pickColor 
+    }
     addLight(param) {
         let { type, name, color, direct, position } = param;
         let light = new webgl.Light();
@@ -2063,7 +2078,6 @@ webgl.Stage = class {
     }
     setBackGroundColor(param) {
         let [r, g, b] = param;
-        this.backColor = param;
         webgl.gl.clearColor(r, g, b, 1.0);
 
     }
@@ -2079,7 +2093,7 @@ webgl.Stage = class {
 
     renderPickColor(elapsed) {
         let stage = webgl.stage;
-        let backupColor = stage.backColor.slice();
+
         stage.setBackGroundColor([0.5, 0.5, 0.5]);
         stage.clear();
 
@@ -2087,7 +2101,7 @@ webgl.Stage = class {
         webgl.iterateChild(this, 'objs', webgl.renderEffect, { effectName: 'pick', elapsed: elapsed });
 
 
-        stage.setBackGroundColor(backupColor);
+        stage.setBackGroundColor(stage.backColor);
     }
 
 
@@ -2205,31 +2219,31 @@ webgl.calculateMatrix = function (obj) {
     obj.parentMatrix.setIdentity().multiply(obj.parent.parentMatrix).multiply(obj.transformMatrix).multiply(obj.operateMatrix);
     obj.modelMatrix.setIdentity().multiply(obj.parentMatrix).multiply(obj.matrix);
 };
-webgl.mvpGeneralFun = function mvpGeneralFun(gl, obj) {
-    let stage = webgl.stage;
-    stage.mvpMatrix.set(stage.camera.matrix).multiply(obj.modelMatrix);
-    gl.uniformMatrix4fv(this.location, false, stage.mvpMatrix.elements);
-};
+// webgl.mvpGeneralFun = function mvpGeneralFun(gl, obj) {
+//     let stage = webgl.stage;
+//     stage.mvpMatrix.set(stage.camera.matrix).multiply(obj.modelMatrix);
+//     gl.uniformMatrix4fv(this.location, false, stage.mvpMatrix.elements);
+// };
 
-webgl.modelGeneralFun = function modelGeneralFun(gl, obj) {
-    gl.uniformMatrix4fv(this.location, false, obj.modelMatrix.elements);
-};
-webgl.normalGeneralFun = function normalGeneralFun(gl, obj) {
+// webgl.modelGeneralFun = function modelGeneralFun(gl, obj) {
+//     gl.uniformMatrix4fv(this.location, false, obj.modelMatrix.elements);
+// };
+// webgl.normalGeneralFun = function normalGeneralFun(gl, obj) {
 
-    obj.normalMatrix.setInverseOf(obj.modelMatrix);
-    obj.normalMatrix.transpose();
-    gl.uniformMatrix4fv(this.location, false, obj.normalMatrix.elements);
-};
+//     obj.normalMatrix.setInverseOf(obj.modelMatrix);
+//     obj.normalMatrix.transpose();
+//     gl.uniformMatrix4fv(this.location, false, obj.normalMatrix.elements);
+// };
 
-webgl.pickcolorGeneralFun = function colorGeneralFun(gl, obj) {
-    let color = obj.pick.color;
-    gl.uniform4f(this.location, color[0] / 255, color[1] / 255, color[2] / 255, 1);
+// webgl.pickcolorGeneralFun = function colorGeneralFun(gl, obj) {
+//     let color = obj.pick.color;
+//     gl.uniform4f(this.location, color[0] / 255, color[1] / 255, color[2] / 255, 1);
 
-};
-webgl.selectedGeneralFun = function sendSelectedColorsToShader(gl, obj) {
-    let color = [1, 0, 0];
-    gl.uniform4f(this.location, color[0], color[1], color[2], 1);
-};
+// };
+// webgl.selectedGeneralFun = function sendSelectedColorsToShader(gl, obj) {
+//     let color = [1, 0, 0];
+//     gl.uniform4f(this.location, color[0], color[1], color[2], 1);
+// };
 
 webgl.draw = function (gl, obj) {
 
@@ -2313,3 +2327,71 @@ xs.Timer = class {
 };
 
 
+webgl.ObjTemplate = class {
+    constructor(param) {
+        this.data = JSON.stringify(param);
+    }
+    copy() {
+        return JSON.parse(this.data);
+    }
+};
+
+webgl.calculateMatrix = function (obj) {
+    obj.parentMatrix.setIdentity().multiply(obj.parent.parentMatrix).multiply(obj.transformMatrix).multiply(obj.operateMatrix);
+    obj.modelMatrix.setIdentity().multiply(obj.parentMatrix).multiply(obj.matrix);
+};
+// webgl.mvpGeneralFun = function mvpGeneralFun(gl, obj) {
+//     let stage = webgl.stage;
+//     stage.mvpMatrix.set(stage.camera.matrix).multiply(obj.modelMatrix);
+//     gl.uniformMatrix4fv(this.location, false, stage.mvpMatrix.elements);
+// };
+
+// webgl.modelGeneralFun = function modelGeneralFun(gl, obj) {
+//     gl.uniformMatrix4fv(this.location, false, obj.modelMatrix.elements);
+// };
+// webgl.normalGeneralFun = function normalGeneralFun(gl, obj) {
+
+//     obj.normalMatrix.setInverseOf(obj.modelMatrix);
+//     obj.normalMatrix.transpose();
+//     gl.uniformMatrix4fv(this.location, false, obj.normalMatrix.elements);
+// };
+
+// webgl.pickcolorGeneralFun = function colorGeneralFun(gl, obj) {
+//     let color = obj.pick.color;
+//     gl.uniform4f(this.location, color[0] / 255, color[1] / 255, color[2] / 255, 1);
+
+// };
+// webgl.selectedGeneralFun = function sendSelectedColorsToShader(gl, obj) {
+//     let color = [1, 0, 0];
+//     gl.uniform4f(this.location, color[0], color[1], color[2], 1);
+// };
+
+webgl.uniformFunctions = {
+    "mvp": function mvpMatrixGeneralFun(gl, obj) {
+        let stage = webgl.stage;
+        stage.mvpMatrix.set(stage.camera.matrix).multiply(obj.modelMatrix);
+        gl.uniformMatrix4fv(this.location, false, stage.mvpMatrix.elements);
+    },
+    "model": function modelMatrixGeneralFun(gl, obj) {
+        gl.uniformMatrix4fv(this.location, false, obj.modelMatrix.elements);
+    },
+    "normal": function normalMatrixGeneralFun(gl, obj) {
+        obj.normalMatrix.setInverseOf(obj.modelMatrix);
+        obj.normalMatrix.transpose();
+        gl.uniformMatrix4fv(this.location, false, obj.normalMatrix.elements);
+    },
+    "lightColor": function directLightColor(gl, light) {
+        gl.uniform3fv(this.location, light.color.elements);
+    },
+    "lightDirection": function directLightDirection(gl, light) {
+        gl.uniform3fv(this.location, light.direct.elements);
+    },
+    "select": function sendSelectedColorsToShader(gl, obj) {
+        gl.uniform4f(this.location, 1, 0, 0, 1);
+    },
+    "pickColor": function colorGeneralFun(gl, obj) {
+        let color = obj.pick.color;
+        gl.uniform4f(this.location, color[0] / 255, color[1] / 255, color[2] / 255, 1);
+
+    }
+};

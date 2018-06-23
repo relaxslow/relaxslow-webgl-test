@@ -37,10 +37,10 @@ xs.init = function (param) {
     linkPageToButton('emptyPage2', 'emptyPage2');
 
 
-    linkPageToButton('webgl026', 'helloCube');
-    linkPageToButton('webgl027', 'lightedCube');
-    linkPageToButton('webgl028', 'JointModel');
-    linkPageToButton('webgl029', 'rotateObject');
+    // linkPageToButton('webgl026', 'helloCube');
+    // linkPageToButton('webgl027', 'lightedCube');
+    // linkPageToButton('webgl028', 'JointModel');
+    // linkPageToButton('webgl029', 'rotateObject');
     linkPageToButton('webgl030', 'pickObj');
 
 

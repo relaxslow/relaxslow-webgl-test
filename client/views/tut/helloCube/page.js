@@ -256,7 +256,7 @@ xs.init = function (param) {
         stage.addObj(
             {
                 name: "box",
-                program: programs["lightedCube-CubePointLightPerFrag"],
+                program: "lightedCube-CubePointLightPerFrag",
                 primitiveType: gl.LINE_STRIP,
                 attributes: [
                     {
@@ -330,7 +330,7 @@ xs.init = function (param) {
         //rectangle
         stage.addObj({
             name: 'rectangle',
-            program: programs["helloCube-rectangle"],
+            program: "helloCube-rectangle",
             primitiveType: gl.TRIANGLE_STRIP,
             uniforms: [
                 {
@@ -380,7 +380,7 @@ xs.init = function (param) {
         });
         stage.addObj({
             name: "originIndicator",
-            program: programs["lightedCube-indicator"],
+            program: "lightedCube-indicator",
             primitiveType: gl.LINES,
             uniforms: [
                 {
@@ -421,7 +421,7 @@ xs.init = function (param) {
             const info = infos[i];
             stage.addObj({
                 name: `treeLines ${i}`,
-                program: programs["helloCube-treeLine"],
+                program: "helloCube-treeLine",
                 primitiveType: gl.TRIANGLES,
                 uniforms: [
                     {

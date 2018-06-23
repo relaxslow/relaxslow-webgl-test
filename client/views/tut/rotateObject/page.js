@@ -251,7 +251,7 @@ xs.init = function (param) {
         let arm1 = stage.createObj(
             {
                 name: "arm1",
-                program: programs["rotateObject-baseShader"],
+                program: "rotateObject-baseShader",
                 primitiveType: gl.TRIANGLES,
                 attributes: [
                     {
@@ -341,7 +341,7 @@ xs.init = function (param) {
         let arm2 = stage.createObj(
             {
                 name: "arm2",
-                program: programs["rotateObject-baseShader"],
+                program: "rotateObject-baseShader",
                 primitiveType: gl.TRIANGLES,
                 attributes: [
                     {
@@ -431,7 +431,7 @@ xs.init = function (param) {
         let arm3 = stage.createObj(
             {
                 name: "arm3",
-                program: programs["rotateObject-baseShader"],
+                program: "rotateObject-baseShader",
                 primitiveType: gl.TRIANGLES,
                 attributes: [
                     {
@@ -521,7 +521,7 @@ xs.init = function (param) {
         let arm4 = stage.createObj(
             {
                 name: "arm4",
-                program: programs["rotateObject-baseShader"],
+                program: "rotateObject-baseShader",
                 primitiveType: gl.TRIANGLES,
                 attributes: [
                     {
@@ -610,7 +610,7 @@ xs.init = function (param) {
         let arm5 = stage.createObj(
             {
                 name: "arm5",
-                program: programs["rotateObject-baseShader"],
+                program: "rotateObject-baseShader",
                 primitiveType: gl.TRIANGLES,
                 attributes: [
                     {
@@ -700,7 +700,7 @@ xs.init = function (param) {
         let arm6 = stage.createObj(
             {
                 name: "arm6",
-                program: programs["rotateObject-baseShader"],
+                program: "rotateObject-baseShader",
                 primitiveType: gl.TRIANGLES,
                 attributes: [
                     {
@@ -796,7 +796,7 @@ xs.init = function (param) {
         arm4.addChild(arm6);
         stage.addObj({
             name: "originIndicator",
-            program: programs["rotateObject-indicator"],
+            program: "rotateObject-indicator",
             primitiveType: gl.LINES,
             uniforms: [
                 {

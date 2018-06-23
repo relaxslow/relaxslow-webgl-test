@@ -253,13 +253,91 @@ xs.init = function (param) {
         });
 
 
+        let baseBox = new webgl.ObjTemplate({
+            program: `${folder}-baseShaderPick`,
+            primitiveType: gl.TRIANGLES,
+            attributes: [
+                {
+                    name: "a_Position",
+                    dataAmount: 3,
+                    beginIndex: 0,
+                    bufferName: "boxVertexPos",
+                },
+                {
+                    name: "a_Color",
+                    dataAmount: 3,
+                    beginIndex: 0,
+                    bufferName: 'boxVertexColorWhite',
+                },
+                {
+                    name: "a_Normal",
+                    dataAmount: 3,
+                    beginIndex: 0,
+                    bufferName: 'boxNormal'
+                },
+                {
+                    name: "a_TexCoord",
+                    dataAmount: 2,
+                    beginIndex: 0,
+                    bufferName: 'boxTextureCord',
+                }
+            ],
 
+            indice: { bufferName: 'boxIndice' },
+            uniforms: [
+                {
+                    name: "u_MVPMatrix",
+                    funName: "mvp"
+                },
+                {
+                    name: "u_ModelMatrix",
+                    funName: "model"
+                },
+                {
+                    name: "u_NormalMatrix",
+                    funName: "normal"
+                },
 
-        let arm1 = stage.createObj(
-            {
-                name: "arm1",
-                program: programs[`${folder}-baseShaderPick`],
-                primitiveType: gl.TRIANGLES,
+            ],
+            useLights: [
+                {
+                    lightName: 'direct',
+                    name: "u_DirectLightColor",
+                    funName: "lightColor"
+                },
+                {
+                    lightName: 'direct',
+                    name: "u_DirectLightDirection",
+                    funName: "lightDirection"
+                },
+                {
+                    lightName: 'ambient',
+                    name: "u_AmbientLightColor",
+                    funName: "lightColor"
+                },
+            ],
+        });
+        let defaultTexture = new webgl.ObjTemplate({
+            useTextures: [
+                {
+                    name: "u_Sampler0",
+                    channel: 1,
+                    textureName: "default",
+                },
+            ],
+        });
+        let skyTexture = new webgl.ObjTemplate({
+            useTextures: [
+                {
+                    name: "u_Sampler0",
+                    channel: 1,
+                    textureName: "sky",
+                },
+            ],
+        });
+        let selectAble = new webgl.ObjTemplate({
+            selected: {
+                program: "pickObj-selected",
                 attributes: [
                     {
                         name: "a_Position",
@@ -267,73 +345,27 @@ xs.init = function (param) {
                         beginIndex: 0,
                         bufferName: "boxVertexPos",
                     },
-                    {
-                        name: "a_Color",
-                        dataAmount: 3,
-                        beginIndex: 0,
-                        bufferName: 'boxVertexColorWhite',
-                    },
-                    {
-                        name: "a_Normal",
-                        dataAmount: 3,
-                        beginIndex: 0,
-                        bufferName: 'boxNormal'
-                    },
-                    {
-                        name: "a_TexCoord",
-                        dataAmount: 2,
-                        beginIndex: 0,
-                        bufferName: 'boxTextureCord',
-                    }
                 ],
-
-                indice: { bufferName: 'boxIndice' },
                 uniforms: [
                     {
                         name: "u_MVPMatrix",
-                        fun: webgl.mvpGeneralFun
-                    },
-                    {
-                        name: "u_ModelMatrix",
-                        fun: webgl.modelGeneralFun
-                    },
-                    {
-                        name: "u_NormalMatrix",//normal must after 
-                        fun: webgl.normalGeneralFun
+                        funName: "mvp"
                     },
 
-                ],
-                useLights: [
                     {
-                        lightName: 'direct',
-                        name: "u_DirectLightColor",
-                        fun: function (gl, light) {
-                            gl.uniform3fv(this.location, light.color.elements);
-                        }
-                    },
-                    {
-                        lightName: 'direct',
-                        name: "u_DirectLightDirection",
-                        fun: function (gl, light) {
-                            gl.uniform3fv(this.location, light.direct.elements);
-                        }
-                    },
-                    {
-                        lightName: 'ambient',
-                        name: "u_AmbientLightColor",
-                        fun: function (gl, light) {
-                            gl.uniform3fv(this.location, light.color.elements);
-                        }
-                    },
-                ],
-                useTextures: [
-                    {
-                        name: "u_Sampler0",
-                        channel: 1,
-                        textureName: "sky",
-                    },
-                ],
+                        name: "u_SelectedColor",
+                        funName: "select"
 
+                    }
+                ],
+            }
+        });
+
+
+
+        let arm1 = stage.createObj(
+            {
+                name: 'arm1',
                 init: function (obj) {
                     this.dragAngle = [0, 0];
                     this.matrix.translate(0, 0.15, 0);
@@ -342,596 +374,69 @@ xs.init = function (param) {
                 update: function (elapsed) {
                     this.transformMatrix.rotate(this.dragAngle[0], 1, 0, 0);
                     this.transformMatrix.rotate(this.dragAngle[1], 0, 1, 0);
-
                 },
-                selected: {
-                    program: programs["pickObj-selected"],
-                    attributes: [
-                        {
-                            name: "a_Position",
-                            dataAmount: 3,
-                            beginIndex: 0,
-                            bufferName: "boxVertexPos",
-                        },
-                    ],
-                    uniforms: [
-                        {
-                            name: "u_MVPMatrix",
-                            fun: webgl.mvpGeneralFun
-                        },
-
-                        {
-                            name: "u_SelectedColor",
-                            fun: webgl.selectedGeneralFun
-
-                        }
-                    ],
-                }
-            }
+            },
+            [baseBox, selectAble, skyTexture]
         );
 
         let arm2 = stage.createObj(
             {
-                name: "arm2",
-                program: programs[`${folder}-baseShaderPick`],
-                primitiveType: gl.TRIANGLES,
-                attributes: [
-                    {
-                        name: "a_Position",
-                        dataAmount: 3,
-                        beginIndex: 0,
-                        bufferName: "boxVertexPos",
-                    },
-                    {
-                        name: "a_Color",
-                        dataAmount: 3,
-                        beginIndex: 0,
-                        bufferName: 'boxVertexColorWhite',
-                    },
-                    {
-                        name: "a_Normal",
-                        dataAmount: 3,
-                        beginIndex: 0,
-                        bufferName: 'boxNormal'
-                    },
-                    {
-                        name: "a_TexCoord",
-                        dataAmount: 2,
-                        beginIndex: 0,
-                        bufferName: 'boxTextureCord',
-                    }
-                ],
-
-                indice: { bufferName: 'boxIndice' },
-                uniforms: [
-                    {
-                        name: "u_MVPMatrix",
-                        fun: webgl.mvpGeneralFun
-                    },
-                    {
-                        name: "u_ModelMatrix",
-                        fun: webgl.modelGeneralFun
-                    },
-                    {
-                        name: "u_NormalMatrix",//normal must after 
-                        fun: webgl.normalGeneralFun
-                    },
-
-                ],
-                useLights: [
-                    {
-                        lightName: 'direct',
-                        name: "u_DirectLightColor",
-                        fun: function (gl, light) {
-                            gl.uniform3fv(this.location, light.color.elements);
-                        }
-                    },
-                    {
-                        lightName: 'direct',
-                        name: "u_DirectLightDirection",
-                        fun: function (gl, light) {
-                            gl.uniform3fv(this.location, light.direct.elements);
-                        }
-                    },
-                    {
-                        lightName: 'ambient',
-                        name: "u_AmbientLightColor",
-                        fun: function (gl, light) {
-                            gl.uniform3fv(this.location, light.color.elements);
-                        }
-                    },
-                ],
-                useTextures: [
-                    {
-                        name: "u_Sampler0",
-                        channel: 0,
-                        textureName: "default",
-                    },
-                ],
+                name: 'arm2',
                 init: function (obj) {
                     this.matrix.translate(0, 0.5, 0);
                     this.matrix.scale(0.5, 1, 0.5);
                     this.operateMatrix.translate(0, 0.3, 0);
-
-
                 },
-
-                selected: {
-                    program: programs["pickObj-selected"],
-                    attributes: [
-                        {
-                            name: "a_Position",
-                            dataAmount: 3,
-                            beginIndex: 0,
-                            bufferName: "boxVertexPos",
-                        },
-                    ],
-                    uniforms: [
-                        {
-                            name: "u_MVPMatrix",
-                            fun: webgl.mvpGeneralFun
-                        },
-
-                        {
-                            name: "u_SelectedColor",
-                            fun: webgl.selectedGeneralFun
-
-                        }
-                    ],
-                }
-
-            }
+            },
+            [baseBox, selectAble, defaultTexture]
         );
-
         let arm3 = stage.createObj(
             {
-                name: "arm3",
-                program: programs[`${folder}-baseShaderPick`],
-                primitiveType: gl.TRIANGLES,
-                attributes: [
-                    {
-                        name: "a_Position",
-                        dataAmount: 3,
-                        beginIndex: 0,
-                        bufferName: "boxVertexPos",
-                    },
-                    {
-                        name: "a_Color",
-                        dataAmount: 3,
-                        beginIndex: 0,
-                        bufferName: 'boxVertexColorWhite',
-                    },
-                    {
-                        name: "a_Normal",
-                        dataAmount: 3,
-                        beginIndex: 0,
-                        bufferName: 'boxNormal'
-                    },
-                    {
-                        name: "a_TexCoord",
-                        dataAmount: 2,
-                        beginIndex: 0,
-                        bufferName: 'boxTextureCord',
-                    }
-                ],
-
-                indice: { bufferName: 'boxIndice' },
-                uniforms: [
-                    {
-                        name: "u_MVPMatrix",
-                        fun: webgl.mvpGeneralFun
-                    },
-                    {
-                        name: "u_ModelMatrix",
-                        fun: webgl.modelGeneralFun
-                    },
-                    {
-                        name: "u_NormalMatrix",//normal must after 
-                        fun: webgl.normalGeneralFun
-                    },
-
-                ],
-                useLights: [
-                    {
-                        lightName: 'direct',
-                        name: "u_DirectLightColor",
-                        fun: function (gl, light) {
-                            gl.uniform3fv(this.location, light.color.elements);
-                        }
-                    },
-                    {
-                        lightName: 'direct',
-                        name: "u_DirectLightDirection",
-                        fun: function (gl, light) {
-                            gl.uniform3fv(this.location, light.direct.elements);
-                        }
-                    },
-                    {
-                        lightName: 'ambient',
-                        name: "u_AmbientLightColor",
-                        fun: function (gl, light) {
-                            gl.uniform3fv(this.location, light.color.elements);
-                        }
-                    },
-                ],
-                useTextures: [
-                    {
-                        name: "u_Sampler0",
-                        channel: 0,
-                        textureName: "default",
-                    },
-                ],
+                name: 'arm3',
                 init: function (obj) {
                     this.matrix.translate(0, 0.5, 0);
                     this.matrix.scale(0.3, 1, 0.3);
                     this.operateMatrix.translate(0, 1, 0);
-
                 },
-                update: function (elapsed) {
-
-                },
-                selected: {
-                    program: programs["pickObj-selected"],
-                    attributes: [
-                        {
-                            name: "a_Position",
-                            dataAmount: 3,
-                            beginIndex: 0,
-                            bufferName: "boxVertexPos",
-                        },
-                    ],
-                    uniforms: [
-                        {
-                            name: "u_MVPMatrix",
-                            fun: webgl.mvpGeneralFun
-                        },
-
-                        {
-                            name: "u_SelectedColor",
-                            fun: webgl.selectedGeneralFun
-
-                        }
-                    ],
-                }
-            }
+            },
+            [baseBox, selectAble, defaultTexture]
         );
 
         let arm4 = stage.createObj(
             {
-                name: "arm4",
-                program: programs[`${folder}-baseShaderPick`],
-                primitiveType: gl.TRIANGLES,
-                attributes: [
-                    {
-                        name: "a_Position",
-                        dataAmount: 3,
-                        beginIndex: 0,
-                        bufferName: "boxVertexPos",
-                    },
-                    {
-                        name: "a_Color",
-                        dataAmount: 3,
-                        beginIndex: 0,
-                        bufferName: 'boxVertexColorWhite',
-                    },
-                    {
-                        name: "a_Normal",
-                        dataAmount: 3,
-                        beginIndex: 0,
-                        bufferName: 'boxNormal'
-                    },
-                    {
-                        name: "a_TexCoord",
-                        dataAmount: 2,
-                        beginIndex: 0,
-                        bufferName: 'boxTextureCord',
-                    }
-                ],
-
-                indice: { bufferName: 'boxIndice' },
-                uniforms: [
-                    {
-                        name: "u_MVPMatrix",
-                        fun: webgl.mvpGeneralFun
-                    },
-                    {
-                        name: "u_ModelMatrix",
-                        fun: webgl.modelGeneralFun
-                    },
-                    {
-                        name: "u_NormalMatrix",
-                        fun: webgl.normalGeneralFun
-                    },
-
-                ],
-                useLights: [
-                    {
-                        lightName: 'direct',
-                        name: "u_DirectLightColor",
-                        fun: function (gl, light) {
-                            gl.uniform3fv(this.location, light.color.elements);
-                        }
-                    },
-                    {
-                        lightName: 'direct',
-                        name: "u_DirectLightDirection",
-                        fun: function (gl, light) {
-                            gl.uniform3fv(this.location, light.direct.elements);
-                        }
-                    },
-                    {
-                        lightName: 'ambient',
-                        name: "u_AmbientLightColor",
-                        fun: function (gl, light) {
-                            gl.uniform3fv(this.location, light.color.elements);
-                        }
-                    },
-                ],
-                useTextures: [
-                    {
-                        name: "u_Sampler0",
-                        channel: 0,
-                        textureName: "default",
-                    },
-                ],
+                name: 'arm4',
                 init: function (obj) {
                     this.matrix.translate(0, 0.2, 0);
                     this.matrix.scale(0.8, 0.4, 0.4);
                     this.operateMatrix.translate(0, 1, 0);
                 },
-                update: function (elapsed) {
-
-                },
-                selected: {
-                    program: programs["pickObj-selected"],
-                    attributes: [
-                        {
-                            name: "a_Position",
-                            dataAmount: 3,
-                            beginIndex: 0,
-                            bufferName: "boxVertexPos",
-                        },
-                    ],
-                    uniforms: [
-                        {
-                            name: "u_MVPMatrix",
-                            fun: webgl.mvpGeneralFun
-                        },
-
-                        {
-                            name: "u_SelectedColor",
-                            fun: webgl.selectedGeneralFun
-
-                        }
-                    ],
-                }
-            }
+            },
+            [baseBox, selectAble, defaultTexture]
         );
 
         let arm5 = stage.createObj(
             {
-                name: "arm5",
-                program: programs[`${folder}-baseShaderPick`],
-                primitiveType: gl.TRIANGLES,
-                attributes: [
-                    {
-                        name: "a_Position",
-                        dataAmount: 3,
-                        beginIndex: 0,
-                        bufferName: "boxVertexPos",
-                    },
-                    {
-                        name: "a_Color",
-                        dataAmount: 3,
-                        beginIndex: 0,
-                        bufferName: 'boxVertexColorWhite',
-                    },
-                    {
-                        name: "a_Normal",
-                        dataAmount: 3,
-                        beginIndex: 0,
-                        bufferName: 'boxNormal'
-                    },
-                    {
-                        name: "a_TexCoord",
-                        dataAmount: 2,
-                        beginIndex: 0,
-                        bufferName: 'boxTextureCord',
-                    }
-                ],
-
-                indice: { bufferName: 'boxIndice' },
-                uniforms: [
-                    {
-                        name: "u_MVPMatrix",
-                        fun: webgl.mvpGeneralFun
-                    },
-                    {
-                        name: "u_ModelMatrix",
-                        fun: webgl.modelGeneralFun
-                    },
-                    {
-                        name: "u_NormalMatrix",//normal must after 
-                        fun: webgl.normalGeneralFun
-                    },
-
-                ],
-                useLights: [
-                    {
-                        lightName: 'direct',
-                        name: "u_DirectLightColor",
-                        fun: function (gl, light) {
-                            gl.uniform3fv(this.location, light.color.elements);
-                        }
-                    },
-                    {
-                        lightName: 'direct',
-                        name: "u_DirectLightDirection",
-                        fun: function (gl, light) {
-                            gl.uniform3fv(this.location, light.direct.elements);
-                        }
-                    },
-                    {
-                        lightName: 'ambient',
-                        name: "u_AmbientLightColor",
-                        fun: function (gl, light) {
-                            gl.uniform3fv(this.location, light.color.elements);
-                        }
-                    },
-                ],
-                useTextures: [
-                    {
-                        name: "u_Sampler0",
-                        channel: 0,
-                        textureName: "default",
-                    },
-                ],
+                name: 'arm5',
                 init: function (obj) {
                     this.matrix.translate(0, 0.1, 0);
                     this.matrix.scale(0.1, 0.2, 0.1);
                     this.operateMatrix.translate(-0.2, 0.4, 0);
-
                 },
-                update: function (elapsed) {
-
-                },
-                selected: {
-                    program: programs["pickObj-selected"],
-                    attributes: [
-                        {
-                            name: "a_Position",
-                            dataAmount: 3,
-                            beginIndex: 0,
-                            bufferName: "boxVertexPos",
-                        },
-                    ],
-                    uniforms: [
-                        {
-                            name: "u_MVPMatrix",
-                            fun: webgl.mvpGeneralFun
-                        },
-
-                        {
-                            name: "u_SelectedColor",
-                            fun: webgl.selectedGeneralFun
-
-                        }
-                    ],
-                }
-            }
+            },
+            [baseBox, selectAble, defaultTexture]
         );
-
         let arm6 = stage.createObj(
             {
-                name: "arm6",
-                program: programs[`${folder}-baseShaderPick`],
-                primitiveType: gl.TRIANGLES,
-                attributes: [
-                    {
-                        name: "a_Position",
-                        dataAmount: 3,
-                        beginIndex: 0,
-                        bufferName: "boxVertexPos",
-                    },
-                    {
-                        name: "a_Color",
-                        dataAmount: 3,
-                        beginIndex: 0,
-                        bufferName: 'boxVertexColorWhite',
-                    },
-                    {
-                        name: "a_Normal",
-                        dataAmount: 3,
-                        beginIndex: 0,
-                        bufferName: 'boxNormal'
-                    },
-                    {
-                        name: "a_TexCoord",
-                        dataAmount: 2,
-                        beginIndex: 0,
-                        bufferName: 'boxTextureCord',
-                    }
-                ],
-
-                indice: { bufferName: 'boxIndice' },
-                uniforms: [
-                    {
-                        name: "u_MVPMatrix",
-                        fun: webgl.mvpGeneralFun
-                    },
-                    {
-                        name: "u_ModelMatrix",
-                        fun: webgl.modelGeneralFun
-                    },
-                    {
-                        name: "u_NormalMatrix",//normal must after 
-                        fun: webgl.normalGeneralFun
-                    },
-
-                ],
-                useLights: [
-                    {
-                        lightName: 'direct',
-                        name: "u_DirectLightColor",
-                        fun: function (gl, light) {
-                            gl.uniform3fv(this.location, light.color.elements);
-                        }
-                    },
-                    {
-                        lightName: 'direct',
-                        name: "u_DirectLightDirection",
-                        fun: function (gl, light) {
-                            gl.uniform3fv(this.location, light.direct.elements);
-                        }
-                    },
-                    {
-                        lightName: 'ambient',
-                        name: "u_AmbientLightColor",
-                        fun: function (gl, light) {
-                            gl.uniform3fv(this.location, light.color.elements);
-                        }
-                    },
-                ],
-                useTextures: [
-                    {
-                        name: "u_Sampler0",
-                        channel: 0,
-                        textureName: "default",
-                    },
-                ],
+                name: 'arm6',
                 init: function (obj) {
                     this.matrix.translate(0, 0.1, 0);
                     this.matrix.scale(0.1, 0.2, 0.1);
                     this.operateMatrix.translate(0.2, 0.4, 0);
-
-
                 },
-                selected: {
-                    program: programs["pickObj-selected"],
-                    attributes: [
-                        {
-                            name: "a_Position",
-                            dataAmount: 3,
-                            beginIndex: 0,
-                            bufferName: "boxVertexPos",
-                        },
-                    ],
-                    uniforms: [
-                        {
-                            name: "u_MVPMatrix",
-                            fun: webgl.mvpGeneralFun
-                        },
-
-                        {
-                            name: "u_SelectedColor",
-                            fun: webgl.selectedGeneralFun
-
-                        }
-                    ],
-                }
-
-            }
+            },
+            [baseBox, selectAble, defaultTexture]
         );
+
         //hierarchy
         stage.addChild(arm1);
         arm1.addChild(arm2);
@@ -941,15 +446,15 @@ xs.init = function (param) {
         arm4.addChild(arm6);
         stage.addObj({
             name: "originIndicator",
-            program: programs[`${folder}-indicator`],
+            program: `${folder}-indicator`,
             primitiveType: gl.LINES,
             uniforms: [
                 {
                     name: "u_MVPMatrix",
-                    fun: webgl.mvpGeneralFun
+                    funName: "mvp"
                 }
             ],
-            attributes: [//program  independent
+            attributes: [
                 {
                     name: "a_Position",
                     dataAmount: 3,
@@ -969,7 +474,6 @@ xs.init = function (param) {
 
         stage.beginAnimation();
         canvas.onmousedown = function (evt) {
-
             let stage = webgl.stage;
             var x = evt.clientX, y = evt.clientY;
             // Start dragging if a moue is in <canvas>
